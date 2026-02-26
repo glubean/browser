@@ -16,6 +16,7 @@ import type { Browser, ElementHandle, Page } from "puppeteer-core";
 import { attachNetworkTracer } from "./network.ts";
 import { collectNavigationMetrics } from "./metrics.ts";
 import {
+  ActionabilityError,
   type ActionOptions,
   asActionablePage,
   waitForActionable,
@@ -65,6 +66,29 @@ interface BrowserOptionsBase {
 }
 
 /**
+ * Structured interaction record emitted by browser methods.
+ *
+ * Matches the `GlubeanAction` shape from `@glubean/sdk` via structural typing.
+ */
+export interface BrowserAction {
+  category: string;
+  target: string;
+  duration: number;
+  status: "ok" | "error" | "timeout";
+  detail?: Record<string, unknown>;
+}
+
+/**
+ * Structured event emitted for observations/artifacts (screenshots, console errors).
+ *
+ * Matches the `GlubeanEvent` shape from `@glubean/sdk` via structural typing.
+ */
+export interface BrowserEvent {
+  type: string;
+  data: Record<string, unknown>;
+}
+
+/**
  * Minimal subset of TestContext needed by the browser plugin.
  *
  * Defined here to avoid a hard import dependency on the SDK's internal types,
@@ -73,6 +97,8 @@ interface BrowserOptionsBase {
 export interface BrowserTestContext {
   /** Test identifier used for namespacing screenshots. */
   testId?: string;
+  action(a: BrowserAction): void;
+  event(ev: BrowserEvent): void;
   trace(request: {
     name?: string;
     method: string;
@@ -233,6 +259,10 @@ export class GlubeanPage {
         const type = msg.type();
         const text = msg.text();
         if (type === "error") {
+          ctx.event({
+            type: "browser:console-error",
+            data: { message: text, source: msg.location()?.url },
+          });
           ctx.warn(false, `[browser:console] ${text}`);
         } else {
           ctx.log(`[browser:${type}] ${text}`);
@@ -241,6 +271,11 @@ export class GlubeanPage {
 
       page.on("pageerror", (err: unknown) => {
         const msg = err instanceof Error ? err.message : String(err);
+        const stack = err instanceof Error ? err.stack : undefined;
+        ctx.event({
+          type: "browser:uncaught-error",
+          data: { message: msg, stack },
+        });
         ctx.warn(false, `[browser:uncaught] ${msg}`);
       });
     }
@@ -272,13 +307,16 @@ export class GlubeanPage {
     }
   }
 
-  private async _saveScreenshot(filename: string): Promise<string> {
+  private async _saveScreenshot(filename: string, label: string): Promise<string> {
     const dir = `${this._screenshotDir}/${this._sanitizeLabel(this._testId)}`;
     await this._ensureDir(dir);
     const path = `${dir}/${filename}`;
     // deno-lint-ignore no-explicit-any
     await this.raw.screenshot({ path, fullPage: true } as any);
-    this._ctx.log(`[browser:screenshot] ${path}`);
+    this._ctx.event({
+      type: "browser:screenshot",
+      data: { path, label, fullPage: true },
+    });
     return path;
   }
 
@@ -289,6 +327,7 @@ export class GlubeanPage {
     const ts = this._formatTimestamp();
     await this._saveScreenshot(
       `${num}-${this._sanitizeLabel(action)}-${ts}.png`,
+      action,
     );
   }
 
@@ -300,6 +339,7 @@ export class GlubeanPage {
     try {
       await this._saveScreenshot(
         `FAIL-${num}-${this._sanitizeLabel(action)}-${ts}.png`,
+        `FAIL:${action}`,
       );
     } catch {
       // best-effort — page may be in a broken state
@@ -316,9 +356,34 @@ export class GlubeanPage {
     if (this._screenshotMode === "off") return;
     const ts = this._formatTimestamp();
     try {
-      await this._saveScreenshot(`FAIL-final-${ts}.png`);
+      await this._saveScreenshot(`FAIL-final-${ts}.png`, "FAIL:final");
     } catch {
       // best-effort
+    }
+  }
+
+  // ── Auto-wait diagnostics ─────────────────────────────────────────
+
+  private static readonly _AUTOWAIT_METRIC_THRESHOLD = 500;
+  private static readonly _AUTOWAIT_WARN_THRESHOLD = 5_000;
+
+  private _emitAutoWaitDiagnostics(
+    action: string,
+    selector: string,
+    autoWaitMs: number,
+  ): void {
+    if (autoWaitMs > GlubeanPage._AUTOWAIT_WARN_THRESHOLD) {
+      this._ctx.warn(
+        false,
+        `[browser] Auto-wait for ${action}("${selector}") took ${autoWaitMs}ms — ` +
+          `consider checking why the element is slow to become actionable`,
+      );
+    }
+    if (autoWaitMs > GlubeanPage._AUTOWAIT_METRIC_THRESHOLD) {
+      this._ctx.metric("browser_actionability_wait_ms", autoWaitMs, {
+        unit: "ms",
+        tags: { selector, action },
+      });
     }
   }
 
@@ -327,7 +392,7 @@ export class GlubeanPage {
   /**
    * Navigate to a URL. Relative paths are resolved against the configured `baseUrl`.
    *
-   * Auto-emits a `ctx.trace()` event and (if enabled) Navigation Timing metrics.
+   * Emits a `browser:goto` action and (if enabled) Navigation Timing metrics.
    * Captures a screenshot on failure or after every step (depending on config).
    */
   async goto(
@@ -349,19 +414,27 @@ export class GlubeanPage {
         waitUntil: options?.waitUntil ?? "load",
       });
     } catch (err) {
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:goto",
+        target: url,
+        duration,
+        status: "error",
+        detail: { url: resolvedUrl, error: String(err) },
+      });
       await this._captureFailure(`goto-${url}`);
       throw err;
     }
 
     const duration = Date.now() - start;
-    const status = response?.status() ?? 0;
+    const httpStatus = response?.status() ?? 0;
 
-    this._ctx.trace({
-      name: `[browser] Navigate ${url}`,
-      method: "GET",
-      url: resolvedUrl,
-      status,
+    this._ctx.action({
+      category: "browser:goto",
+      target: url,
       duration,
+      status: httpStatus >= 400 ? "error" : "ok",
+      detail: { url: resolvedUrl, httpStatus },
     });
 
     if (this._metricsEnabled) {
@@ -382,13 +455,33 @@ export class GlubeanPage {
    * clicking. Use `{ force: true }` to skip actionability checks.
    */
   async click(selector: string, options?: ActionOptions): Promise<void> {
+    const start = Date.now();
     try {
       await waitForActionable(asActionablePage(this.raw), selector, {
         timeout: options?.timeout ?? this._actionTimeout,
         force: options?.force,
       });
+      const autoWaitMs = Date.now() - start;
       await this.raw.click(selector);
+      const duration = Date.now() - start;
+
+      this._ctx.action({
+        category: "browser:click",
+        target: selector,
+        duration,
+        status: "ok",
+        detail: { autoWaitMs, force: options?.force ?? false },
+      });
+      this._emitAutoWaitDiagnostics("click", selector, autoWaitMs);
     } catch (err) {
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:click",
+        target: selector,
+        duration,
+        status: err instanceof ActionabilityError ? "timeout" : "error",
+        detail: { error: String(err), force: options?.force ?? false },
+      });
       await this._captureFailure(`click-${selector}`);
       throw err;
     }
@@ -406,13 +499,33 @@ export class GlubeanPage {
     text: string,
     options?: ActionOptions,
   ): Promise<void> {
+    const start = Date.now();
     try {
       await waitForActionable(asActionablePage(this.raw), selector, {
         timeout: options?.timeout ?? this._actionTimeout,
         force: options?.force,
       });
+      const autoWaitMs = Date.now() - start;
       await this.raw.type(selector, text);
+      const duration = Date.now() - start;
+
+      this._ctx.action({
+        category: "browser:type",
+        target: selector,
+        duration,
+        status: "ok",
+        detail: { textLength: text.length, autoWaitMs, force: options?.force ?? false },
+      });
+      this._emitAutoWaitDiagnostics("type", selector, autoWaitMs);
     } catch (err) {
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:type",
+        target: selector,
+        duration,
+        status: err instanceof ActionabilityError ? "timeout" : "error",
+        detail: { textLength: text.length, error: String(err) },
+      });
       await this._captureFailure(`type-${selector}`);
       throw err;
     }
@@ -516,14 +629,32 @@ export class GlubeanPage {
     const matches = (url: string) =>
       typeof pattern === "string" ? url.includes(pattern) : pattern.test(url);
 
-    await this._retryUntil(
-      () => Promise.resolve(this.raw.url()),
-      matches,
-      (lastUrl) =>
-        `waitForURL: page URL "${lastUrl}" did not match ` +
-        `"${pattern}" after ${options?.timeout ?? 5_000}ms`,
-      { timeout: options?.timeout ?? this._actionTimeout },
-    );
+    const start = Date.now();
+    try {
+      await this._retryUntil(
+        () => Promise.resolve(this.raw.url()),
+        matches,
+        (lastUrl) =>
+          `waitForURL: page URL "${lastUrl}" did not match ` +
+          `"${pattern}" after ${options?.timeout ?? 5_000}ms`,
+        { timeout: options?.timeout ?? this._actionTimeout },
+      );
+      this._ctx.action({
+        category: "browser:wait",
+        target: `URL matches ${String(pattern)}`,
+        duration: Date.now() - start,
+        status: "ok",
+      });
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:wait",
+        target: `URL matches ${String(pattern)}`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { error: String(err) },
+      });
+      throw err;
+    }
   }
 
   /**
@@ -533,10 +664,29 @@ export class GlubeanPage {
     selector: string,
     options?: { timeout?: number },
   ): Promise<string | null> {
+    const start = Date.now();
     const timeout = options?.timeout ?? this._actionTimeout;
-    await this.raw.waitForSelector(selector, { timeout });
-    // deno-lint-ignore no-explicit-any
-    return await this.raw.$eval(selector, (el: any) => el.textContent);
+    try {
+      await this.raw.waitForSelector(selector, { timeout });
+      // deno-lint-ignore no-explicit-any
+      const result = await this.raw.$eval(selector, (el: any) => el.textContent);
+      this._ctx.action({
+        category: "browser:wait",
+        target: `textContent("${selector}")`,
+        duration: Date.now() - start,
+        status: "ok",
+      });
+      return result;
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:wait",
+        target: `textContent("${selector}")`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { error: String(err) },
+      });
+      throw err;
+    }
   }
 
   /**
@@ -546,10 +696,29 @@ export class GlubeanPage {
     selector: string,
     options?: { timeout?: number },
   ): Promise<string> {
+    const start = Date.now();
     const timeout = options?.timeout ?? this._actionTimeout;
-    await this.raw.waitForSelector(selector, { timeout });
-    // deno-lint-ignore no-explicit-any
-    return await this.raw.$eval(selector, (el: any) => el.innerText);
+    try {
+      await this.raw.waitForSelector(selector, { timeout });
+      // deno-lint-ignore no-explicit-any
+      const result = await this.raw.$eval(selector, (el: any) => el.innerText);
+      this._ctx.action({
+        category: "browser:wait",
+        target: `innerText("${selector}")`,
+        duration: Date.now() - start,
+        status: "ok",
+      });
+      return result;
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:wait",
+        target: `innerText("${selector}")`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { error: String(err) },
+      });
+      throw err;
+    }
   }
 
   /**
@@ -560,14 +729,33 @@ export class GlubeanPage {
     attr: string,
     options?: { timeout?: number },
   ): Promise<string | null> {
+    const start = Date.now();
     const timeout = options?.timeout ?? this._actionTimeout;
-    await this.raw.waitForSelector(selector, { timeout });
-    return await this.raw.$eval(
-      selector,
-      // deno-lint-ignore no-explicit-any
-      (el: any, a: string) => el.getAttribute(a),
-      attr,
-    );
+    try {
+      await this.raw.waitForSelector(selector, { timeout });
+      const result = await this.raw.$eval(
+        selector,
+        // deno-lint-ignore no-explicit-any
+        (el: any, a: string) => el.getAttribute(a),
+        attr,
+      );
+      this._ctx.action({
+        category: "browser:wait",
+        target: `getAttribute("${selector}", "${attr}")`,
+        duration: Date.now() - start,
+        status: "ok",
+      });
+      return result;
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:wait",
+        target: `getAttribute("${selector}", "${attr}")`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { error: String(err) },
+      });
+      throw err;
+    }
   }
 
   /**
@@ -577,10 +765,29 @@ export class GlubeanPage {
     selector: string,
     options?: { timeout?: number },
   ): Promise<string> {
+    const start = Date.now();
     const timeout = options?.timeout ?? this._actionTimeout;
-    await this.raw.waitForSelector(selector, { timeout });
-    // deno-lint-ignore no-explicit-any
-    return await this.raw.$eval(selector, (el: any) => el.value ?? "");
+    try {
+      await this.raw.waitForSelector(selector, { timeout });
+      // deno-lint-ignore no-explicit-any
+      const result = await this.raw.$eval(selector, (el: any) => el.value ?? "");
+      this._ctx.action({
+        category: "browser:wait",
+        target: `inputValue("${selector}")`,
+        duration: Date.now() - start,
+        status: "ok",
+      });
+      return result;
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:wait",
+        target: `inputValue("${selector}")`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { error: String(err) },
+      });
+      throw err;
+    }
   }
 
   /**
@@ -642,14 +849,32 @@ export class GlubeanPage {
     const matches = (url: string) =>
       typeof pattern === "string" ? url.includes(pattern) : pattern.test(url);
 
-    await this._retryUntil(
-      () => Promise.resolve(this.raw.url()),
-      matches,
-      (lastUrl) =>
-        `expectURL: page URL "${lastUrl}" did not match ` +
-        `"${pattern}" after ${options?.timeout ?? 5_000}ms`,
-      options,
-    );
+    const start = Date.now();
+    try {
+      await this._retryUntil(
+        () => Promise.resolve(this.raw.url()),
+        matches,
+        (lastUrl) =>
+          `expectURL: page URL "${lastUrl}" did not match ` +
+          `"${pattern}" after ${options?.timeout ?? 5_000}ms`,
+        options,
+      );
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectURL(${JSON.stringify(String(pattern))})`,
+        duration: Date.now() - start,
+        status: "ok",
+      });
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectURL(${JSON.stringify(String(pattern))})`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { error: String(err) },
+      });
+      throw err;
+    }
   }
 
   /**
@@ -667,15 +892,35 @@ export class GlubeanPage {
         : expected.test(text);
     };
 
-    await this._retryUntil(
-      // deno-lint-ignore no-explicit-any
-      () => this.raw.$eval(selector, (el: any) => el.textContent as string | null).catch(() => null),
-      matches,
-      (lastVal) =>
-        `expectText("${selector}"): expected ${JSON.stringify(expected)} ` +
-        `but received ${JSON.stringify(lastVal)} after ${options?.timeout ?? 5_000}ms`,
-      options,
-    );
+    const start = Date.now();
+    let lastVal: string | null = null;
+    try {
+      lastVal = await this._retryUntil(
+        // deno-lint-ignore no-explicit-any
+        () => this.raw.$eval(selector, (el: any) => el.textContent as string | null).catch(() => null),
+        matches,
+        (lv) =>
+          `expectText("${selector}"): expected ${JSON.stringify(expected)} ` +
+          `but received ${JSON.stringify(lv)} after ${options?.timeout ?? 5_000}ms`,
+        options,
+      );
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectText("${selector}")`,
+        duration: Date.now() - start,
+        status: "ok",
+        detail: { expected: String(expected), actual: lastVal },
+      });
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectText("${selector}")`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { expected: String(expected), actual: lastVal, error: String(err) },
+      });
+      throw err;
+    }
   }
 
   /**
@@ -685,14 +930,32 @@ export class GlubeanPage {
     selector: string,
     options?: { timeout?: number },
   ): Promise<void> {
-    await this._retryUntil(
-      () => this.isVisible(selector),
-      (visible) => visible === true,
-      () =>
-        `expectVisible("${selector}"): element was not visible ` +
-        `after ${options?.timeout ?? 5_000}ms`,
-      options,
-    );
+    const start = Date.now();
+    try {
+      await this._retryUntil(
+        () => this.isVisible(selector),
+        (visible) => visible === true,
+        () =>
+          `expectVisible("${selector}"): element was not visible ` +
+          `after ${options?.timeout ?? 5_000}ms`,
+        options,
+      );
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectVisible("${selector}")`,
+        duration: Date.now() - start,
+        status: "ok",
+      });
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectVisible("${selector}")`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { error: String(err) },
+      });
+      throw err;
+    }
   }
 
   /**
@@ -702,14 +965,32 @@ export class GlubeanPage {
     selector: string,
     options?: { timeout?: number },
   ): Promise<void> {
-    await this._retryUntil(
-      () => this.isVisible(selector),
-      (visible) => visible === false,
-      () =>
-        `expectHidden("${selector}"): element was still visible ` +
-        `after ${options?.timeout ?? 5_000}ms`,
-      options,
-    );
+    const start = Date.now();
+    try {
+      await this._retryUntil(
+        () => this.isVisible(selector),
+        (visible) => visible === false,
+        () =>
+          `expectHidden("${selector}"): element was still visible ` +
+          `after ${options?.timeout ?? 5_000}ms`,
+        options,
+      );
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectHidden("${selector}")`,
+        duration: Date.now() - start,
+        status: "ok",
+      });
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectHidden("${selector}")`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { error: String(err) },
+      });
+      throw err;
+    }
   }
 
   /**
@@ -728,20 +1009,40 @@ export class GlubeanPage {
         : expected.test(val);
     };
 
-    await this._retryUntil(
-      () =>
-        this.raw.$eval(
-          selector,
-          // deno-lint-ignore no-explicit-any
-          (el: any, a: string) => el.getAttribute(a) as string | null,
-          attr,
-        ).catch(() => null),
-      matches,
-      (lastVal) =>
-        `expectAttribute("${selector}", "${attr}"): expected ${JSON.stringify(expected)} ` +
-        `but received ${JSON.stringify(lastVal)} after ${options?.timeout ?? 5_000}ms`,
-      options,
-    );
+    const start = Date.now();
+    let lastVal: string | null = null;
+    try {
+      lastVal = await this._retryUntil(
+        () =>
+          this.raw.$eval(
+            selector,
+            // deno-lint-ignore no-explicit-any
+            (el: any, a: string) => el.getAttribute(a) as string | null,
+            attr,
+          ).catch(() => null),
+        matches,
+        (lv) =>
+          `expectAttribute("${selector}", "${attr}"): expected ${JSON.stringify(expected)} ` +
+          `but received ${JSON.stringify(lv)} after ${options?.timeout ?? 5_000}ms`,
+        options,
+      );
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectAttribute("${selector}", "${attr}")`,
+        duration: Date.now() - start,
+        status: "ok",
+        detail: { expected: String(expected), actual: lastVal },
+      });
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectAttribute("${selector}", "${attr}")`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { expected: String(expected), actual: lastVal, error: String(err) },
+      });
+      throw err;
+    }
   }
 
   /**
@@ -752,14 +1053,34 @@ export class GlubeanPage {
     expected: number,
     options?: { timeout?: number },
   ): Promise<void> {
-    await this._retryUntil(
-      async () => (await this.raw.$$(selector)).length,
-      (count) => count === expected,
-      (lastCount) =>
-        `expectCount("${selector}"): expected ${expected} elements ` +
-        `but found ${lastCount} after ${options?.timeout ?? 5_000}ms`,
-      options,
-    );
+    const start = Date.now();
+    let lastCount = 0;
+    try {
+      lastCount = await this._retryUntil(
+        async () => (await this.raw.$$(selector)).length,
+        (count) => count === expected,
+        (lc) =>
+          `expectCount("${selector}"): expected ${expected} elements ` +
+          `but found ${lc} after ${options?.timeout ?? 5_000}ms`,
+        options,
+      );
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectCount("${selector}")`,
+        duration: Date.now() - start,
+        status: "ok",
+        detail: { expected, actual: lastCount },
+      });
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectCount("${selector}")`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { expected, actual: lastCount, error: String(err) },
+      });
+      throw err;
+    }
   }
 
   /** Clean up: remove CDP listeners and close the page. */

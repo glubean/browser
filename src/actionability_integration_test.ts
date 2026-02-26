@@ -25,6 +25,8 @@ const chromeAvailable = !!detectChromePath();
 
 function makeCtx(): BrowserTestContext {
   return {
+    action: () => {},
+    event: () => {},
     trace: () => {},
     metric: () => {},
     log: () => {},

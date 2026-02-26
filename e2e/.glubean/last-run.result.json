@@ -1,22 +1,23 @@
 {
   "target": "./tests",
   "files": [
-    "tests/landing.test.ts"
+    "tests/landing.test.ts",
+    "tests/multi-step.test.ts"
   ],
-  "runAt": "2026-02-26 09:03:24",
+  "runAt": "2026-02-26 10:24:53",
   "summary": {
-    "total": 4,
-    "passed": 4,
+    "total": 6,
+    "passed": 6,
     "failed": 0,
     "skipped": 0,
-    "durationMs": 18999,
+    "durationMs": 30221,
     "stats": {
       "httpRequestTotal": 0,
       "httpErrorTotal": 0,
-      "assertionTotal": 7,
+      "assertionTotal": 16,
       "assertionFailed": 0,
-      "warningTotal": 0,
-      "warningTriggered": 0,
+      "warningTotal": 1,
+      "warningTriggered": 1,
       "stepTotal": 0,
       "stepPassed": 0,
       "stepFailed": 0
@@ -31,7 +32,7 @@
         "content"
       ],
       "success": true,
-      "durationMs": 4188,
+      "durationMs": 5177,
       "events": [
         {
           "type": "log",
@@ -53,7 +54,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/",
             "status": 200,
-            "duration": 1017
+            "duration": 1022
           }
         },
         {
@@ -63,7 +64,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/screenshots/1-1920.avif",
             "status": 200,
-            "duration": 509
+            "duration": 585
           }
         },
         {
@@ -73,87 +74,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 796
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 807
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 809
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /screenshots/5-1920.avif",
-            "method": "GET",
-            "url": "https://www.glubean.com/screenshots/5-1920.avif",
-            "status": 200,
-            "duration": 357
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 834
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 843
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /screenshots/4-1920.avif",
-            "method": "GET",
-            "url": "https://www.glubean.com/screenshots/4-1920.avif",
-            "status": 200,
-            "duration": 366
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /screenshots/3-1920.avif",
-            "method": "GET",
-            "url": "https://www.glubean.com/screenshots/3-1920.avif",
-            "status": 200,
-            "duration": 428
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /screenshots/2-1920.avif",
-            "method": "GET",
-            "url": "https://www.glubean.com/screenshots/2-1920.avif",
-            "status": 200,
-            "duration": 480
+            "duration": 937
           }
         },
         {
@@ -163,7 +84,87 @@
             "method": "GET",
             "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 1019
+            "duration": 1104
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/3-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/3-1920.avif",
+            "status": 200,
+            "duration": 337
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/2-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/2-1920.avif",
+            "status": 200,
+            "duration": 389
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1155
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1197
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/5-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/5-1920.avif",
+            "status": 200,
+            "duration": 455
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/4-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/4-1920.avif",
+            "status": 200,
+            "duration": 522
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1348
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1367
           }
         },
         {
@@ -173,7 +174,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 1036
+            "duration": 1367
           }
         },
         {
@@ -183,13 +184,13 @@
             "method": "GET",
             "url": "https://glubean.com",
             "status": 200,
-            "duration": 3425
+            "duration": 4494
           }
         },
         {
           "type": "metric",
           "name": "page_load_ms",
-          "value": 3390,
+          "value": 4468,
           "unit": "ms",
           "tags": {
             "url": "/"
@@ -198,7 +199,7 @@
         {
           "type": "metric",
           "name": "dom_content_loaded_ms",
-          "value": 2815,
+          "value": 3847,
           "unit": "ms",
           "tags": {
             "url": "/"
@@ -245,8 +246,8 @@
           "type": "status",
           "status": "completed",
           "id": "landing-get-started-section",
-          "peakMemoryBytes": 15765400,
-          "peakMemoryMB": "15.04"
+          "peakMemoryBytes": 15975136,
+          "peakMemoryMB": "15.24"
         }
       ]
     },
@@ -258,7 +259,7 @@
         "content"
       ],
       "success": true,
-      "durationMs": 4693,
+      "durationMs": 4318,
       "events": [
         {
           "type": "log",
@@ -280,7 +281,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/",
             "status": 200,
-            "duration": 931
+            "duration": 1025
           }
         },
         {
@@ -290,7 +291,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/screenshots/1-1920.avif",
             "status": 200,
-            "duration": 391
+            "duration": 471
           }
         },
         {
@@ -300,87 +301,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 967
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 967
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 989
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 998
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 1001
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 1003
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 1117
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /screenshots/3-1920.avif",
-            "method": "GET",
-            "url": "https://www.glubean.com/screenshots/3-1920.avif",
-            "status": 200,
-            "duration": 354
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] Navigate https://glubean.com",
-            "method": "GET",
-            "url": "https://glubean.com",
-            "status": 200,
-            "duration": 4077
+            "duration": 911
           }
         },
         {
@@ -390,25 +311,47 @@
             "method": "GET",
             "url": "https://www.glubean.com/screenshots/4-1920.avif",
             "status": 200,
-            "duration": 415
+            "duration": 336
           }
         },
         {
-          "type": "metric",
-          "name": "page_load_ms",
-          "value": 4052,
-          "unit": "ms",
-          "tags": {
-            "url": "/"
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1104
           }
         },
         {
-          "type": "metric",
-          "name": "dom_content_loaded_ms",
-          "value": 3638,
-          "unit": "ms",
-          "tags": {
-            "url": "/"
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/2-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/2-1920.avif",
+            "status": 200,
+            "duration": 366
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1108
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1164
           }
         },
         {
@@ -418,7 +361,75 @@
             "method": "GET",
             "url": "https://www.glubean.com/screenshots/5-1920.avif",
             "status": 200,
-            "duration": 423
+            "duration": 425
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1164
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1164
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/3-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/3-1920.avif",
+            "status": 200,
+            "duration": 505
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1334
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] Navigate https://glubean.com",
+            "method": "GET",
+            "url": "https://glubean.com",
+            "status": 200,
+            "duration": 3598
+          }
+        },
+        {
+          "type": "metric",
+          "name": "page_load_ms",
+          "value": 3567,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "metric",
+          "name": "dom_content_loaded_ms",
+          "value": 2955,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
           }
         },
         {
@@ -478,8 +489,8 @@
           "type": "status",
           "status": "completed",
           "id": "landing-hero-content",
-          "peakMemoryBytes": 15792968,
-          "peakMemoryMB": "15.06"
+          "peakMemoryBytes": 15856144,
+          "peakMemoryMB": "15.12"
         }
       ]
     },
@@ -491,7 +502,7 @@
         "smoke"
       ],
       "success": true,
-      "durationMs": 5051,
+      "durationMs": 4256,
       "events": [
         {
           "type": "log",
@@ -513,7 +524,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/",
             "status": 200,
-            "duration": 960
+            "duration": 820
           }
         },
         {
@@ -523,7 +534,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/screenshots/1-1920.avif",
             "status": 200,
-            "duration": 514
+            "duration": 742
           }
         },
         {
@@ -533,77 +544,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 1086
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /screenshots/4-1920.avif",
-            "method": "GET",
-            "url": "https://www.glubean.com/screenshots/4-1920.avif",
-            "status": 200,
-            "duration": 485
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /screenshots/5-1920.avif",
-            "method": "GET",
-            "url": "https://www.glubean.com/screenshots/5-1920.avif",
-            "status": 200,
-            "duration": 524
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 1404
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 1405
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /screenshots/3-1920.avif",
-            "method": "GET",
-            "url": "https://www.glubean.com/screenshots/3-1920.avif",
-            "status": 200,
-            "duration": 557
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 1438
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /screenshots/2-1920.avif",
-            "method": "GET",
-            "url": "https://www.glubean.com/screenshots/2-1920.avif",
-            "status": 200,
-            "duration": 661
+            "duration": 1092
           }
         },
         {
@@ -613,7 +554,17 @@
             "method": "GET",
             "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 1543
+            "duration": 1248
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/5-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/5-1920.avif",
+            "status": 200,
+            "duration": 317
           }
         },
         {
@@ -623,7 +574,57 @@
             "method": "GET",
             "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 1639
+            "duration": 1299
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/3-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/3-1920.avif",
+            "status": 200,
+            "duration": 363
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/2-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/2-1920.avif",
+            "status": 200,
+            "duration": 412
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1351
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/4-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/4-1920.avif",
+            "status": 200,
+            "duration": 435
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1433
           }
         },
         {
@@ -633,7 +634,17 @@
             "method": "GET",
             "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 1641
+            "duration": 1433
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1435
           }
         },
         {
@@ -643,13 +654,13 @@
             "method": "GET",
             "url": "https://glubean.com",
             "status": 200,
-            "duration": 4433
+            "duration": 3546
           }
         },
         {
           "type": "metric",
           "name": "page_load_ms",
-          "value": 4409,
+          "value": 3519,
           "unit": "ms",
           "tags": {
             "url": "/"
@@ -658,7 +669,7 @@
         {
           "type": "metric",
           "name": "dom_content_loaded_ms",
-          "value": 3641,
+          "value": 3002,
           "unit": "ms",
           "tags": {
             "url": "/"
@@ -701,8 +712,8 @@
           "type": "status",
           "status": "completed",
           "id": "landing-homepage-loads",
-          "peakMemoryBytes": 15746408,
-          "peakMemoryMB": "15.02"
+          "peakMemoryBytes": 16164640,
+          "peakMemoryMB": "15.42"
         }
       ]
     },
@@ -714,7 +725,7 @@
         "performance"
       ],
       "success": true,
-      "durationMs": 5066,
+      "durationMs": 4787,
       "events": [
         {
           "type": "log",
@@ -736,7 +747,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/",
             "status": 200,
-            "duration": 1052
+            "duration": 750
           }
         },
         {
@@ -746,7 +757,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/screenshots/1-1920.avif",
             "status": 200,
-            "duration": 682
+            "duration": 383
           }
         },
         {
@@ -756,27 +767,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 1093
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 1254
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /screenshots/3-1920.avif",
-            "method": "GET",
-            "url": "https://www.glubean.com/screenshots/3-1920.avif",
-            "status": 200,
-            "duration": 356
+            "duration": 1112
           }
         },
         {
@@ -786,57 +777,17 @@
             "method": "GET",
             "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 1311
+            "duration": 1273
           }
         },
         {
           "type": "trace",
           "data": {
-            "name": "[browser] GET /screenshots/4-1920.avif",
+            "name": "[browser] GET /_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "method": "GET",
-            "url": "https://www.glubean.com/screenshots/4-1920.avif",
+            "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 418
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /screenshots/5-1920.avif",
-            "method": "GET",
-            "url": "https://www.glubean.com/screenshots/5-1920.avif",
-            "status": 200,
-            "duration": 418
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /screenshots/2-1920.avif",
-            "method": "GET",
-            "url": "https://www.glubean.com/screenshots/2-1920.avif",
-            "status": 200,
-            "duration": 443
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 1433
-          }
-        },
-        {
-          "type": "trace",
-          "data": {
-            "name": "[browser] GET /_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "method": "GET",
-            "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
-            "status": 200,
-            "duration": 1450
+            "duration": 1297
           }
         },
         {
@@ -846,7 +797,7 @@
             "method": "GET",
             "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 1463
+            "duration": 1297
           }
         },
         {
@@ -856,7 +807,57 @@
             "method": "GET",
             "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
             "status": 200,
-            "duration": 1503
+            "duration": 1298
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/4-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/4-1920.avif",
+            "status": 200,
+            "duration": 357
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1300
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/5-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/5-1920.avif",
+            "status": 200,
+            "duration": 369
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/3-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/3-1920.avif",
+            "status": 200,
+            "duration": 427
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1371
           }
         },
         {
@@ -866,13 +867,23 @@
             "method": "GET",
             "url": "https://glubean.com",
             "status": 200,
-            "duration": 4458
+            "duration": 4093
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/2-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/2-1920.avif",
+            "status": 200,
+            "duration": 509
           }
         },
         {
           "type": "metric",
           "name": "page_load_ms",
-          "value": 4433,
+          "value": 4066,
           "unit": "ms",
           "tags": {
             "url": "/"
@@ -881,7 +892,7 @@
         {
           "type": "metric",
           "name": "dom_content_loaded_ms",
-          "value": 3834,
+          "value": 3558,
           "unit": "ms",
           "tags": {
             "url": "/"
@@ -891,13 +902,13 @@
           "type": "log",
           "message": "Page load time",
           "data": {
-            "ms": 4492
+            "ms": 4100
           }
         },
         {
           "type": "metric",
           "name": "e2e_page_load_ms",
-          "value": 4492,
+          "value": 4100,
           "unit": "ms",
           "tags": {
             "page": "/"
@@ -906,8 +917,8 @@
         {
           "type": "assertion",
           "passed": true,
-          "message": "expected 4492 to be less than 10000",
-          "actual": 4492,
+          "message": "expected 4100 to be less than 10000",
+          "actual": 4100,
           "expected": "< 10000"
         },
         {
@@ -933,8 +944,413 @@
           "type": "status",
           "status": "completed",
           "id": "landing-page-load-performance",
-          "peakMemoryBytes": 15945544,
-          "peakMemoryMB": "15.21"
+          "peakMemoryBytes": 15768032,
+          "peakMemoryMB": "15.04"
+        }
+      ]
+    },
+    {
+      "testId": "example-com-multi-step",
+      "testName": "Navigate example.com and verify structure",
+      "tags": [
+        "multi-step",
+        "screenshot"
+      ],
+      "success": true,
+      "durationMs": 7868,
+      "events": [
+        {
+          "type": "log",
+          "message": "Loading test module: file:///Users/peisong/glubean/browser/e2e/tests/multi-step.test.ts"
+        },
+        {
+          "type": "start",
+          "id": "example-com-multi-step",
+          "name": "Navigate example.com and verify structure",
+          "tags": [
+            "multi-step",
+            "screenshot"
+          ]
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /",
+            "method": "GET",
+            "url": "https://example.com/",
+            "status": 200,
+            "duration": 2545
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] Navigate https://example.com",
+            "method": "GET",
+            "url": "https://example.com",
+            "status": 200,
+            "duration": 2601
+          }
+        },
+        {
+          "type": "metric",
+          "name": "page_load_ms",
+          "value": 2567,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "metric",
+          "name": "dom_content_loaded_ms",
+          "value": 2566,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "log",
+          "message": "[browser:screenshot] .glubean/screenshots/example-com-multi-step/001-goto-https___example_com-2026-02-26T0225.png"
+        },
+        {
+          "type": "log",
+          "message": "Example.com loaded",
+          "data": {
+            "title": "Example Domain"
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected \"Example Domain\" to contain \"Example Domain\"",
+          "actual": "Example Domain",
+          "expected": "Example Domain"
+        },
+        {
+          "type": "log",
+          "message": "Page heading",
+          "data": {
+            "text": "Example Domain"
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected \"Example Domain\" to be \"Example Domain\"",
+          "actual": "Example Domain",
+          "expected": "Example Domain"
+        },
+        {
+          "type": "warning",
+          "condition": false,
+          "message": "[browser:console] Failed to load resource: the server responded with a status of 404 ()"
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /help/example-domains",
+            "method": "GET",
+            "url": "https://www.iana.org/help/example-domains",
+            "status": 200,
+            "duration": 367
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /static/_js/iana.js",
+            "method": "GET",
+            "url": "https://www.iana.org/static/_js/iana.js",
+            "status": 200,
+            "duration": 781
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /static/_js/jquery.js",
+            "method": "GET",
+            "url": "https://www.iana.org/static/_js/jquery.js",
+            "status": 200,
+            "duration": 788
+          }
+        },
+        {
+          "type": "log",
+          "message": "Navigated to",
+          "data": {
+            "url": "https://www.iana.org/help/example-domains"
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected \"https://www.iana.org/help/example-domains\" to contain \"iana.org\"",
+          "actual": "https://www.iana.org/help/example-domains",
+          "expected": "iana.org"
+        },
+        {
+          "type": "log",
+          "message": "IANA page title",
+          "data": {
+            "title": "Example Domains"
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected 15 to be greater than 0",
+          "actual": 15,
+          "expected": "> 0"
+        },
+        {
+          "type": "summary",
+          "data": {
+            "httpRequestTotal": 0,
+            "httpErrorTotal": 0,
+            "httpErrorRate": 0,
+            "assertionTotal": 4,
+            "assertionFailed": 0,
+            "warningTotal": 1,
+            "warningTriggered": 1,
+            "schemaValidationTotal": 0,
+            "schemaValidationFailed": 0,
+            "schemaValidationWarnings": 0,
+            "stepTotal": 0,
+            "stepPassed": 0,
+            "stepFailed": 0,
+            "stepSkipped": 0
+          }
+        },
+        {
+          "type": "status",
+          "status": "completed",
+          "id": "example-com-multi-step",
+          "peakMemoryBytes": 15348976,
+          "peakMemoryMB": "14.64"
+        }
+      ]
+    },
+    {
+      "testId": "hackernews-multi-step",
+      "testName": "Browse Hacker News top stories and navigate to comments",
+      "tags": [
+        "multi-step",
+        "screenshot"
+      ],
+      "success": true,
+      "durationMs": 3815,
+      "events": [
+        {
+          "type": "log",
+          "message": "Loading test module: file:///Users/peisong/glubean/browser/e2e/tests/multi-step.test.ts"
+        },
+        {
+          "type": "start",
+          "id": "hackernews-multi-step",
+          "name": "Browse Hacker News top stories and navigate to comments",
+          "tags": [
+            "multi-step",
+            "screenshot"
+          ]
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /",
+            "method": "GET",
+            "url": "https://news.ycombinator.com/",
+            "status": 200,
+            "duration": 1732
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /hn.js?G2gOzSUTgtH9TuKqJ8N7",
+            "method": "GET",
+            "url": "https://news.ycombinator.com/hn.js?G2gOzSUTgtH9TuKqJ8N7",
+            "status": 200,
+            "duration": 338
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] Navigate https://news.ycombinator.com",
+            "method": "GET",
+            "url": "https://news.ycombinator.com",
+            "status": 200,
+            "duration": 2437
+          }
+        },
+        {
+          "type": "metric",
+          "name": "page_load_ms",
+          "value": 2409,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "metric",
+          "name": "dom_content_loaded_ms",
+          "value": 2219,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "log",
+          "message": "[browser:screenshot] .glubean/screenshots/hackernews-multi-step/001-goto-https___news_ycombinator_com-2026-02-26T0225.png"
+        },
+        {
+          "type": "log",
+          "message": "HN loaded",
+          "data": {
+            "title": "Hacker News"
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected \"Hacker News\" to contain \"Hacker News\"",
+          "actual": "Hacker News",
+          "expected": "Hacker News"
+        },
+        {
+          "type": "log",
+          "message": "Stories on page",
+          "data": {
+            "count": 30
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected 30 to be greater than 0",
+          "actual": 30,
+          "expected": "> 0"
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /?p=2",
+            "method": "GET",
+            "url": "https://news.ycombinator.com/?p=2",
+            "status": 200,
+            "duration": 218
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /hn.js?G2gOzSUTgtH9TuKqJ8N7",
+            "method": "GET",
+            "url": "https://news.ycombinator.com/hn.js?G2gOzSUTgtH9TuKqJ8N7",
+            "status": 200,
+            "duration": 0
+          }
+        },
+        {
+          "type": "log",
+          "message": "[browser:screenshot] .glubean/screenshots/hackernews-multi-step/002-click-a_morelink-2026-02-26T0225.png"
+        },
+        {
+          "type": "log",
+          "message": "Navigated to page 2",
+          "data": {
+            "url": "https://news.ycombinator.com/?p=2"
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected \"https://news.ycombinator.com/?p=2\" to contain \"p=2\"",
+          "actual": "https://news.ycombinator.com/?p=2",
+          "expected": "p=2"
+        },
+        {
+          "type": "log",
+          "message": "Stories on page 2",
+          "data": {
+            "count": 30
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected 30 to be greater than 0",
+          "actual": 30,
+          "expected": "> 0"
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /newest",
+            "method": "GET",
+            "url": "https://news.ycombinator.com/newest",
+            "status": 200,
+            "duration": 205
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /hn.js?G2gOzSUTgtH9TuKqJ8N7",
+            "method": "GET",
+            "url": "https://news.ycombinator.com/hn.js?G2gOzSUTgtH9TuKqJ8N7",
+            "status": 200,
+            "duration": 0
+          }
+        },
+        {
+          "type": "log",
+          "message": "[browser:screenshot] .glubean/screenshots/hackernews-multi-step/003-click-a_href__newest__-2026-02-26T0225.png"
+        },
+        {
+          "type": "log",
+          "message": "Navigated to newest",
+          "data": {
+            "url": "https://news.ycombinator.com/newest"
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected \"https://news.ycombinator.com/newest\" to contain \"newest\"",
+          "actual": "https://news.ycombinator.com/newest",
+          "expected": "newest"
+        },
+        {
+          "type": "summary",
+          "data": {
+            "httpRequestTotal": 0,
+            "httpErrorTotal": 0,
+            "httpErrorRate": 0,
+            "assertionTotal": 5,
+            "assertionFailed": 0,
+            "warningTotal": 0,
+            "warningTriggered": 0,
+            "schemaValidationTotal": 0,
+            "schemaValidationFailed": 0,
+            "schemaValidationWarnings": 0,
+            "stepTotal": 0,
+            "stepPassed": 0,
+            "stepFailed": 0,
+            "stepSkipped": 0
+          }
+        },
+        {
+          "type": "status",
+          "status": "completed",
+          "id": "hackernews-multi-step",
+          "peakMemoryBytes": 17384584,
+          "peakMemoryMB": "16.58"
         }
       ]
     }
