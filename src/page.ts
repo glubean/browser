@@ -29,6 +29,20 @@ import {
 } from "./actionability.ts";
 
 /**
+ * Structural type for a puppeteer-compatible module.
+ *
+ * Accepts `puppeteer-core` (default), `puppeteer`, or `puppeteer-extra` with
+ * plugins pre-registered. Pass via the `puppeteer` option in `BrowserOptions`
+ * to use puppeteer-extra plugins (Stealth, Recaptcha, Adblocker, etc.).
+ */
+export interface PuppeteerLike {
+  // deno-lint-ignore no-explicit-any
+  launch(options?: any): Promise<Browser>;
+  // deno-lint-ignore no-explicit-any
+  connect(options?: any): Promise<Browser>;
+}
+
+/**
  * Plugin configuration options.
  *
  * Use **one** of these connection modes:
@@ -57,6 +71,23 @@ export interface ResponseChecks {
 }
 
 interface BrowserOptionsBase {
+  /**
+   * Custom puppeteer-compatible instance (e.g. `puppeteer-extra` with plugins).
+   *
+   * When provided, Glubean uses this instance for `launch()` / `connect()`
+   * instead of the default `puppeteer-core` import. All puppeteer-extra plugins
+   * registered on the instance will be active on every page.
+   *
+   * @example
+   * ```ts
+   * import puppeteerExtra from "puppeteer-extra";
+   * import StealthPlugin from "puppeteer-extra-plugin-stealth";
+   * puppeteerExtra.use(StealthPlugin());
+   *
+   * browser({ launch: true, puppeteer: puppeteerExtra })
+   * ```
+   */
+  puppeteer?: PuppeteerLike;
   /**
    * Optional var key whose runtime value is prepended to relative URLs in `goto()`.
    * @example "APP_URL"

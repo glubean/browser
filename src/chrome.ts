@@ -9,7 +9,8 @@
  * @module chrome
  */
 
-import puppeteer, { type Browser } from "puppeteer-core";
+import puppeteerDefault, { type Browser } from "puppeteer-core";
+import type { PuppeteerLike } from "./page.ts";
 
 const WELL_KNOWN_PATHS: Record<string, string[]> = {
   darwin: [
@@ -60,9 +61,13 @@ export function detectChromePath(): string | null {
  * Launch a local Chrome instance in headless mode.
  *
  * @param executablePath Explicit path to Chrome. If omitted, auto-detects.
+ * @param puppeteerInstance Custom puppeteer-compatible instance (e.g. puppeteer-extra).
  * @returns A connected Browser instance. The caller is responsible for closing it.
  */
-export async function launchChrome(executablePath?: string): Promise<Browser> {
+export async function launchChrome(
+  executablePath?: string,
+  puppeteerInstance?: PuppeteerLike,
+): Promise<Browser> {
   const chromePath = executablePath ?? detectChromePath();
   if (!chromePath) {
     throw new Error(
@@ -78,7 +83,8 @@ export async function launchChrome(executablePath?: string): Promise<Browser> {
     );
   }
 
-  return await puppeteer.launch({
+  const pptr = puppeteerInstance ?? puppeteerDefault;
+  return await pptr.launch({
     executablePath: chromePath,
     headless: true,
     args: [
@@ -141,8 +147,15 @@ export async function resolveEndpoint(endpoint: string): Promise<string> {
 
 /**
  * Connect to a Chrome instance via WebSocket endpoint (with auto-discovery).
+ *
+ * @param endpoint WebSocket or HTTP endpoint URL.
+ * @param puppeteerInstance Custom puppeteer-compatible instance (e.g. puppeteer-extra).
  */
-export async function connectChrome(endpoint: string): Promise<Browser> {
+export async function connectChrome(
+  endpoint: string,
+  puppeteerInstance?: PuppeteerLike,
+): Promise<Browser> {
   const wsEndpoint = await resolveEndpoint(endpoint);
-  return await puppeteer.connect({ browserWSEndpoint: wsEndpoint });
+  const pptr = puppeteerInstance ?? puppeteerDefault;
+  return await pptr.connect({ browserWSEndpoint: wsEndpoint });
 }

@@ -74,13 +74,15 @@ export function browser(options: BrowserOptions) {
 
     let browserPromise: Promise<Browser> | null = null;
 
+    const pptr = options.puppeteer;
+
     function getBrowser(): Promise<Browser> {
       if (!browserPromise) {
         if ("launch" in options && options.launch) {
-          browserPromise = launchChrome(options.executablePath);
+          browserPromise = launchChrome(options.executablePath, pptr);
         } else if ("endpoint" in options && options.endpoint) {
           const endpoint = runtime.requireVar(options.endpoint);
-          browserPromise = connectChrome(endpoint);
+          browserPromise = connectChrome(endpoint, pptr);
         } else {
           throw new Error(
             'browser() requires either { launch: true } or { endpoint: "VAR_KEY" }.',

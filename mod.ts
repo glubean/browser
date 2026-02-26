@@ -44,6 +44,7 @@ export type {
   BrowserEvent,
   BrowserOptions,
   BrowserTestContext,
+  PuppeteerLike,
   ResponseChecks,
   ScreenshotMode,
 } from "./src/page.ts";
