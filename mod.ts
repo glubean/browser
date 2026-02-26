@@ -44,3 +44,10 @@ export type {
   BrowserTestContext,
   ScreenshotMode,
 } from "./src/page.ts";
+export { ActionabilityError } from "./src/actionability.ts";
+export type {
+  ActionabilityOptions,
+  ActionCheck,
+  ActionDiagnostics,
+  ActionOptions,
+} from "./src/actionability.ts";

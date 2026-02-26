@@ -15,6 +15,11 @@
 import type { Browser, ElementHandle, Page } from "puppeteer-core";
 import { attachNetworkTracer } from "./network.ts";
 import { collectNavigationMetrics } from "./metrics.ts";
+import {
+  type ActionOptions,
+  asActionablePage,
+  waitForActionable,
+} from "./actionability.ts";
 
 /**
  * Plugin configuration options.
@@ -55,6 +60,8 @@ interface BrowserOptionsBase {
   screenshot?: ScreenshotMode;
   /** Directory for auto-screenshots. Default: `".glubean/screenshots"`. */
   screenshotDir?: string;
+  /** Default timeout (ms) for actionability checks on `click()`/`type()`. Default: 30 000. */
+  actionTimeout?: number;
 }
 
 /**
@@ -170,6 +177,7 @@ export class GlubeanPage {
   private readonly _screenshotMode: ScreenshotMode;
   private readonly _screenshotDir: string;
   private readonly _testId: string;
+  private readonly _actionTimeout: number;
   private _stepCounter = 0;
   private _networkCleanup: (() => Promise<void>) | null = null;
 
@@ -181,6 +189,7 @@ export class GlubeanPage {
     screenshotMode: ScreenshotMode,
     screenshotDir: string,
     testId: string,
+    actionTimeout: number,
   ) {
     this.raw = page;
     this._baseUrl = baseUrl;
@@ -189,6 +198,7 @@ export class GlubeanPage {
     this._screenshotMode = screenshotMode;
     this._screenshotDir = screenshotDir;
     this._testId = testId;
+    this._actionTimeout = actionTimeout;
   }
 
   /** @internal */
@@ -205,6 +215,7 @@ export class GlubeanPage {
     const screenshotMode = options.screenshot ?? "on-failure";
     const screenshotDir = options.screenshotDir ?? ".glubean/screenshots";
     const testId = runtimeTestId ?? ctx.testId ?? "unknown";
+    const actionTimeout = options.actionTimeout ?? 30_000;
 
     const gp = new GlubeanPage(
       page,
@@ -214,6 +225,7 @@ export class GlubeanPage {
       screenshotMode,
       screenshotDir,
       testId,
+      actionTimeout,
     );
 
     if (consoleForward) {
@@ -364,12 +376,17 @@ export class GlubeanPage {
   }
 
   /**
-   * Click an element matching the selector. Waits for it to appear first.
-   * Captures a screenshot on failure or after every step (depending on config).
+   * Click an element matching the selector.
+   *
+   * Auto-waits for the element to be attached, visible, and enabled before
+   * clicking. Use `{ force: true }` to skip actionability checks.
    */
-  async click(selector: string): Promise<void> {
+  async click(selector: string, options?: ActionOptions): Promise<void> {
     try {
-      await this.raw.waitForSelector(selector);
+      await waitForActionable(asActionablePage(this.raw), selector, {
+        timeout: options?.timeout ?? this._actionTimeout,
+        force: options?.force,
+      });
       await this.raw.click(selector);
     } catch (err) {
       await this._captureFailure(`click-${selector}`);
@@ -379,12 +396,21 @@ export class GlubeanPage {
   }
 
   /**
-   * Type text into an element matching the selector. Waits for it to appear first.
-   * Captures a screenshot on failure or after every step (depending on config).
+   * Type text into an element matching the selector.
+   *
+   * Auto-waits for the element to be attached, visible, and enabled before
+   * typing. Use `{ force: true }` to skip actionability checks.
    */
-  async type(selector: string, text: string): Promise<void> {
+  async type(
+    selector: string,
+    text: string,
+    options?: ActionOptions,
+  ): Promise<void> {
     try {
-      await this.raw.waitForSelector(selector);
+      await waitForActionable(asActionablePage(this.raw), selector, {
+        timeout: options?.timeout ?? this._actionTimeout,
+        force: options?.force,
+      });
       await this.raw.type(selector, text);
     } catch (err) {
       await this._captureFailure(`type-${selector}`);
