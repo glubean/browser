@@ -459,6 +459,309 @@ export class GlubeanPage {
     return await this.raw.title();
   }
 
+  // ── Retry utility ─────────────────────────────────────────────────
+
+  private static readonly _POLL_MS = 100;
+
+  /**
+   * Poll `fn` until `check(result)` returns true, or throw after `timeout` ms.
+   * Used by all `waitFor*`, `textContent`, and `expect*` methods.
+   */
+  private async _retryUntil<T>(
+    fn: () => Promise<T>,
+    check: (val: T) => boolean,
+    errorMsg: (lastVal: T) => string,
+    options?: { timeout?: number },
+  ): Promise<T> {
+    const timeout = options?.timeout ?? 5_000;
+    const start = Date.now();
+    let lastVal: T | undefined;
+
+    while (Date.now() - start < timeout) {
+      try {
+        lastVal = await fn();
+        if (check(lastVal)) return lastVal;
+      } catch {
+        // element may not exist yet — retry
+      }
+      await new Promise((r) => setTimeout(r, GlubeanPage._POLL_MS));
+    }
+
+    // One final attempt
+    try {
+      lastVal = await fn();
+      if (check(lastVal!)) return lastVal!;
+    } catch {
+      // fall through to error
+    }
+
+    throw new Error(errorMsg(lastVal as T));
+  }
+
+  // ── Phase 4: Navigation Auto-Wait ────────────────────────────────
+
+  /**
+   * Wait until the page URL matches `pattern` (string contains or RegExp test).
+   *
+   * @example
+   * ```ts
+   * await page.click('a[href="/dashboard"]');
+   * await page.waitForURL('/dashboard');
+   * ```
+   */
+  async waitForURL(
+    pattern: string | RegExp,
+    options?: { timeout?: number },
+  ): Promise<void> {
+    const matches = (url: string) =>
+      typeof pattern === "string" ? url.includes(pattern) : pattern.test(url);
+
+    await this._retryUntil(
+      () => Promise.resolve(this.raw.url()),
+      matches,
+      (lastUrl) =>
+        `waitForURL: page URL "${lastUrl}" did not match ` +
+        `"${pattern}" after ${options?.timeout ?? 5_000}ms`,
+      { timeout: options?.timeout ?? this._actionTimeout },
+    );
+  }
+
+  /**
+   * Wait for an element to appear, then return its `textContent`.
+   */
+  async textContent(
+    selector: string,
+    options?: { timeout?: number },
+  ): Promise<string | null> {
+    const timeout = options?.timeout ?? this._actionTimeout;
+    await this.raw.waitForSelector(selector, { timeout });
+    // deno-lint-ignore no-explicit-any
+    return await this.raw.$eval(selector, (el: any) => el.textContent);
+  }
+
+  /**
+   * Wait for an element to appear, then return its `innerText`.
+   */
+  async innerText(
+    selector: string,
+    options?: { timeout?: number },
+  ): Promise<string> {
+    const timeout = options?.timeout ?? this._actionTimeout;
+    await this.raw.waitForSelector(selector, { timeout });
+    // deno-lint-ignore no-explicit-any
+    return await this.raw.$eval(selector, (el: any) => el.innerText);
+  }
+
+  /**
+   * Wait for an element to appear, then return the value of `attr`.
+   */
+  async getAttribute(
+    selector: string,
+    attr: string,
+    options?: { timeout?: number },
+  ): Promise<string | null> {
+    const timeout = options?.timeout ?? this._actionTimeout;
+    await this.raw.waitForSelector(selector, { timeout });
+    return await this.raw.$eval(
+      selector,
+      // deno-lint-ignore no-explicit-any
+      (el: any, a: string) => el.getAttribute(a),
+      attr,
+    );
+  }
+
+  /**
+   * Wait for an input element to appear, then return its `.value`.
+   */
+  async inputValue(
+    selector: string,
+    options?: { timeout?: number },
+  ): Promise<string> {
+    const timeout = options?.timeout ?? this._actionTimeout;
+    await this.raw.waitForSelector(selector, { timeout });
+    // deno-lint-ignore no-explicit-any
+    return await this.raw.$eval(selector, (el: any) => el.value ?? "");
+  }
+
+  /**
+   * Check whether an element is currently visible (non-zero box, not hidden).
+   * Returns immediately — does not wait.
+   */
+  async isVisible(selector: string): Promise<boolean> {
+    const handle = await this.raw.$(selector);
+    if (!handle) return false;
+    try {
+      // deno-lint-ignore no-explicit-any
+      return await handle.evaluate((el: any) => {
+        // deno-lint-ignore no-explicit-any
+        const style = (globalThis as any).getComputedStyle(el);
+        if (style.display === "none" || style.visibility === "hidden") {
+          return false;
+        }
+        const box = el.getBoundingClientRect();
+        return box.width > 0 && box.height > 0;
+      });
+    } finally {
+      await handle.dispose();
+    }
+  }
+
+  /**
+   * Check whether an element is currently enabled (not disabled).
+   * Returns immediately — does not wait.
+   */
+  async isEnabled(selector: string): Promise<boolean> {
+    const handle = await this.raw.$(selector);
+    if (!handle) return false;
+    try {
+      // deno-lint-ignore no-explicit-any
+      return await handle.evaluate((el: any) => {
+        if ("disabled" in el && !!el.disabled) return false;
+        return el.getAttribute("aria-disabled") !== "true";
+      });
+    } finally {
+      await handle.dispose();
+    }
+  }
+
+  // ── Phase 5: Assertion Auto-Retry ────────────────────────────────
+
+  /**
+   * Assert that the page URL matches `pattern`. Retries until match or timeout.
+   *
+   * @example
+   * ```ts
+   * await page.click('button[type="submit"]');
+   * await page.expectURL('/dashboard');
+   * ```
+   */
+  async expectURL(
+    pattern: string | RegExp,
+    options?: { timeout?: number },
+  ): Promise<void> {
+    const matches = (url: string) =>
+      typeof pattern === "string" ? url.includes(pattern) : pattern.test(url);
+
+    await this._retryUntil(
+      () => Promise.resolve(this.raw.url()),
+      matches,
+      (lastUrl) =>
+        `expectURL: page URL "${lastUrl}" did not match ` +
+        `"${pattern}" after ${options?.timeout ?? 5_000}ms`,
+      options,
+    );
+  }
+
+  /**
+   * Assert that an element's text content matches `expected`. Retries until match or timeout.
+   */
+  async expectText(
+    selector: string,
+    expected: string | RegExp,
+    options?: { timeout?: number },
+  ): Promise<void> {
+    const matches = (text: string | null) => {
+      if (text === null) return false;
+      return typeof expected === "string"
+        ? text === expected
+        : expected.test(text);
+    };
+
+    await this._retryUntil(
+      // deno-lint-ignore no-explicit-any
+      () => this.raw.$eval(selector, (el: any) => el.textContent as string | null).catch(() => null),
+      matches,
+      (lastVal) =>
+        `expectText("${selector}"): expected ${JSON.stringify(expected)} ` +
+        `but received ${JSON.stringify(lastVal)} after ${options?.timeout ?? 5_000}ms`,
+      options,
+    );
+  }
+
+  /**
+   * Assert that an element is visible. Retries until visible or timeout.
+   */
+  async expectVisible(
+    selector: string,
+    options?: { timeout?: number },
+  ): Promise<void> {
+    await this._retryUntil(
+      () => this.isVisible(selector),
+      (visible) => visible === true,
+      () =>
+        `expectVisible("${selector}"): element was not visible ` +
+        `after ${options?.timeout ?? 5_000}ms`,
+      options,
+    );
+  }
+
+  /**
+   * Assert that an element is hidden or absent. Retries until hidden or timeout.
+   */
+  async expectHidden(
+    selector: string,
+    options?: { timeout?: number },
+  ): Promise<void> {
+    await this._retryUntil(
+      () => this.isVisible(selector),
+      (visible) => visible === false,
+      () =>
+        `expectHidden("${selector}"): element was still visible ` +
+        `after ${options?.timeout ?? 5_000}ms`,
+      options,
+    );
+  }
+
+  /**
+   * Assert that an element has an attribute matching `expected`. Retries until match or timeout.
+   */
+  async expectAttribute(
+    selector: string,
+    attr: string,
+    expected: string | RegExp,
+    options?: { timeout?: number },
+  ): Promise<void> {
+    const matches = (val: string | null) => {
+      if (val === null) return false;
+      return typeof expected === "string"
+        ? val === expected
+        : expected.test(val);
+    };
+
+    await this._retryUntil(
+      () =>
+        this.raw.$eval(
+          selector,
+          // deno-lint-ignore no-explicit-any
+          (el: any, a: string) => el.getAttribute(a) as string | null,
+          attr,
+        ).catch(() => null),
+      matches,
+      (lastVal) =>
+        `expectAttribute("${selector}", "${attr}"): expected ${JSON.stringify(expected)} ` +
+        `but received ${JSON.stringify(lastVal)} after ${options?.timeout ?? 5_000}ms`,
+      options,
+    );
+  }
+
+  /**
+   * Assert that the number of elements matching `selector` equals `expected`. Retries until match or timeout.
+   */
+  async expectCount(
+    selector: string,
+    expected: number,
+    options?: { timeout?: number },
+  ): Promise<void> {
+    await this._retryUntil(
+      async () => (await this.raw.$$(selector)).length,
+      (count) => count === expected,
+      (lastCount) =>
+        `expectCount("${selector}"): expected ${expected} elements ` +
+        `but found ${lastCount} after ${options?.timeout ?? 5_000}ms`,
+      options,
+    );
+  }
+
   /** Clean up: remove CDP listeners and close the page. */
   async close(): Promise<void> {
     if (this._networkCleanup) {

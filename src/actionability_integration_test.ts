@@ -263,6 +263,107 @@ Deno.test({
 });
 
 // ---------------------------------------------------------------------------
+// Extended selector: aria/ — click waits for delayed visibility
+// ---------------------------------------------------------------------------
+
+Deno.test({
+  name: "actionability: click with aria/ selector waits for visibility",
+  ignore: !chromeAvailable,
+  sanitizeResources: false,
+  sanitizeOps: false,
+  async fn() {
+    const browser = await getBrowser();
+    const rawPage = await browser.newPage();
+    const page = await GlubeanPage._create(
+      rawPage,
+      undefined,
+      makeCtx(),
+      baseOpts,
+    );
+
+    try {
+      await page.goto(`${server!.url}/aria-button`);
+
+      const start = Date.now();
+      await page.click("aria/Submit form");
+      const elapsed = Date.now() - start;
+
+      assert(elapsed >= 400, `waited too short: ${elapsed}ms`);
+      assert(elapsed < 10_000, `waited too long: ${elapsed}ms`);
+    } finally {
+      await page.close();
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Extended selector: ::-p-text() — click waits for enabled
+// ---------------------------------------------------------------------------
+
+Deno.test({
+  name: "actionability: click with ::-p-text() selector waits for enabled",
+  ignore: !chromeAvailable,
+  sanitizeResources: false,
+  sanitizeOps: false,
+  async fn() {
+    const browser = await getBrowser();
+    const rawPage = await browser.newPage();
+    const page = await GlubeanPage._create(
+      rawPage,
+      undefined,
+      makeCtx(),
+      baseOpts,
+    );
+
+    try {
+      await page.goto(`${server!.url}/text-button`);
+
+      const start = Date.now();
+      await page.click("::-p-text(Continue)");
+      const elapsed = Date.now() - start;
+
+      assert(elapsed >= 400, `waited too short: ${elapsed}ms`);
+      assert(elapsed < 10_000, `waited too long: ${elapsed}ms`);
+    } finally {
+      await page.close();
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Extended selector: aria/ — isVisible returns correct result
+// ---------------------------------------------------------------------------
+
+Deno.test({
+  name: "actionability: isVisible with aria/ selector works",
+  ignore: !chromeAvailable,
+  sanitizeResources: false,
+  sanitizeOps: false,
+  async fn() {
+    const browser = await getBrowser();
+    const rawPage = await browser.newPage();
+    const page = await GlubeanPage._create(
+      rawPage,
+      undefined,
+      makeCtx(),
+      baseOpts,
+    );
+
+    try {
+      await page.goto(`${server!.url}/already-ready`);
+      const visible = await page.isVisible("aria/Ready");
+      assertEquals(visible, true);
+
+      await page.goto(`${server!.url}/never-visible`);
+      const hidden = await page.isVisible("aria/Ghost");
+      assertEquals(hidden, false);
+    } finally {
+      await page.close();
+    }
+  },
+});
+
+// ---------------------------------------------------------------------------
 // Cleanup
 // ---------------------------------------------------------------------------
 

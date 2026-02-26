@@ -43,6 +43,63 @@ function handler(req: Request): Response {
         <input id="email" type="email" placeholder="email" />
       `);
 
+    // SPA-style: link click triggers pushState after 500ms
+    case "/spa-navigation":
+      return html(`
+        <a id="link" href="#">Go to /dashboard</a>
+        <script>
+          document.getElementById('link').addEventListener('click', (e) => {
+            e.preventDefault();
+            setTimeout(() => history.pushState({}, '', '/dashboard'), 500);
+          });
+        </script>
+      `);
+
+    // Heading text changes from "Loading..." to "Welcome" after 600ms
+    case "/delayed-text":
+      return html(`
+        <h1 id="heading">Loading...</h1>
+        <script>setTimeout(() => document.getElementById('heading').textContent = 'Welcome', 600)</script>
+      `);
+
+    // Attribute changes from data-status="pending" to "ready" after 500ms
+    case "/delayed-attr":
+      return html(`
+        <div id="box" data-status="pending">Box</div>
+        <script>setTimeout(() => document.getElementById('box').setAttribute('data-status', 'ready'), 500)</script>
+      `);
+
+    // Starts with 1 <li>, adds 2 more after 500ms
+    case "/delayed-list":
+      return html(`
+        <ul id="list"><li>Item 1</li></ul>
+        <script>setTimeout(() => {
+          const ul = document.getElementById('list');
+          ul.innerHTML += '<li>Item 2</li><li>Item 3</li>';
+        }, 500)</script>
+      `);
+
+    // Element visible initially, hidden after 500ms
+    case "/hide-after-delay":
+      return html(`
+        <div id="el" style="padding:10px">Visible for now</div>
+        <script>setTimeout(() => document.getElementById('el').style.display = 'none', 500)</script>
+      `);
+
+    // Button targeted by aria-label, hidden for 600ms then visible
+    case "/aria-button":
+      return html(`
+        <button aria-label="Submit form" style="display:none">Go</button>
+        <script>setTimeout(() => document.querySelector('button').style.display = 'block', 600)</script>
+      `);
+
+    // Button targeted by text content, disabled for 600ms then enabled
+    case "/text-button":
+      return html(`
+        <button disabled>Continue</button>
+        <script>setTimeout(() => document.querySelector('button').disabled = false, 600)</script>
+      `);
+
     default:
       return new Response("Not found", { status: 404 });
   }

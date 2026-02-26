@@ -6,6 +6,10 @@
  * required conditions (attached, visible, enabled) or times out with
  * a diagnostic error.
  *
+ * All selector resolution goes through Puppeteer's engine (via
+ * `page.waitForSelector` / `page.$`) so that extended selectors
+ * (`aria/`, `text/`, `xpath/`, `pierce/`, `::-p-*`) work correctly.
+ *
  * @module actionability
  */
 
@@ -92,20 +96,33 @@ const DEFAULT_TIMEOUT = 30_000;
 const POLL_INTERVAL = 100;
 
 /**
+ * Minimal ElementHandle-like interface returned by `ActionablePage.waitForSelector`.
+ *
+ * Defined here so unit tests can pass a mock without importing puppeteer-core.
+ * Puppeteer's real `ElementHandle` structurally satisfies this interface.
+ */
+export interface ActionableHandle {
+  // deno-lint-ignore no-explicit-any
+  evaluate<T>(fn: (el: any, ...args: any[]) => T, ...args: any[]): Promise<T>;
+  dispose(): Promise<void>;
+}
+
+/**
  * Minimal Page-like interface accepted by `waitForActionable`.
  *
  * Defined here so unit tests can pass a mock without importing puppeteer-core.
+ * Selector resolution is always done by Puppeteer's engine (which supports
+ * extended selectors), never by `document.querySelector`.
  */
 export interface ActionablePage {
   waitForSelector(
     selector: string,
     options?: { visible?: boolean; timeout?: number },
-  ): Promise<unknown>;
-  // deno-lint-ignore no-explicit-any
-  evaluate<T>(fn: string | ((...args: any[]) => T), ...args: any[]): Promise<T>;
+  ): Promise<ActionableHandle | null>;
+  $(selector: string): Promise<ActionableHandle | null>;
 }
 
-/** @internal Shape returned by the in-browser `getElementState` function. */
+/** @internal Shape returned by the in-browser state check. */
 export interface ElementState {
   found: boolean;
   computedDisplay: string | null;
@@ -113,28 +130,26 @@ export interface ElementState {
   isDisabled: boolean | null;
 }
 
+const NOT_FOUND_STATE: ElementState = {
+  found: false,
+  computedDisplay: null,
+  computedVisibility: null,
+  isDisabled: null,
+};
+
 /**
- * Runs inside the browser page context via `page.evaluate()`.
- * Uses `globalThis` casts to satisfy Deno's type checker (no DOM lib).
+ * Runs inside the browser page context via `handle.evaluate()`.
+ * Receives the already-resolved DOM element directly — no querySelector needed.
  */
-function getElementState(selector: string): ElementState {
+// deno-lint-ignore no-explicit-any
+function getHandleState(el: any): Omit<ElementState, "found"> {
   // deno-lint-ignore no-explicit-any
   const g = globalThis as any;
-  const el = g.document.querySelector(selector);
-  if (!el) {
-    return {
-      found: false,
-      computedDisplay: null,
-      computedVisibility: null,
-      isDisabled: null,
-    };
-  }
   const style = g.getComputedStyle(el);
   const disabled: boolean = "disabled" in el
     ? !!el.disabled
     : el.getAttribute("aria-disabled") === "true";
   return {
-    found: true,
     computedDisplay: style.display,
     computedVisibility: style.visibility,
     isDisabled: disabled,
@@ -166,25 +181,31 @@ export async function waitForActionable(
     const remaining = timeout - (Date.now() - start);
     if (remaining <= 0) break;
 
+    let handle: ActionableHandle | null = null;
     try {
       if (needsVisible) {
-        await page.waitForSelector(selector, {
+        handle = await page.waitForSelector(selector, {
           visible: true,
           timeout: Math.min(remaining, POLL_INTERVAL * 3),
         });
+      } else {
+        handle = await page.$(selector);
       }
 
-      if (needsEnabled) {
-        const state = await evaluateElementState(page, selector);
+      if (needsEnabled && handle) {
+        const state = await handle.evaluate(getHandleState);
         if (state.isDisabled) {
+          handle.dispose().catch(() => {});
           if (Date.now() - start >= timeout) break;
           await new Promise((r) => setTimeout(r, POLL_INTERVAL));
           continue;
         }
       }
 
+      if (handle) handle.dispose().catch(() => {});
       return;
     } catch {
+      if (handle) handle.dispose().catch(() => {});
       if (Date.now() - start >= timeout) break;
       await new Promise((r) => setTimeout(r, POLL_INTERVAL));
     }
@@ -236,26 +257,20 @@ async function detectFailedCheck(
   return needsVisible ? "visible" : "enabled";
 }
 
-function evaluateElementState(
-  page: ActionablePage,
-  selector: string,
-): Promise<ElementState> {
-  return page.evaluate(getElementState, selector) as Promise<ElementState>;
-}
-
 async function safeGetState(
   page: ActionablePage,
   selector: string,
 ): Promise<ElementState> {
+  let handle: ActionableHandle | null = null;
   try {
-    return await evaluateElementState(page, selector);
+    handle = await page.$(selector);
+    if (!handle) return NOT_FOUND_STATE;
+    const partial = await handle.evaluate(getHandleState);
+    return { found: true, ...partial };
   } catch {
-    return {
-      found: false,
-      computedDisplay: null,
-      computedVisibility: null,
-      isDisabled: null,
-    };
+    return NOT_FOUND_STATE;
+  } finally {
+    if (handle) handle.dispose().catch(() => {});
   }
 }
 

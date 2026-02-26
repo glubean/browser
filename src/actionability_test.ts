@@ -7,6 +7,7 @@ import {
 } from "jsr:@std/assert";
 import {
   ActionabilityError,
+  type ActionableHandle,
   type ActionablePage,
   type ElementState,
   waitForActionable,
@@ -16,50 +17,59 @@ import {
 // Mock helpers
 // ---------------------------------------------------------------------------
 
-const READY_STATE: ElementState = {
-  found: true,
+type HandleState = Omit<ElementState, "found">;
+
+const READY_HANDLE: HandleState = {
   computedDisplay: "block",
   computedVisibility: "visible",
   isDisabled: false,
 };
 
-const DISABLED_STATE: ElementState = {
-  found: true,
+const DISABLED_HANDLE: HandleState = {
   computedDisplay: "block",
   computedVisibility: "visible",
   isDisabled: true,
 };
 
-const NOT_FOUND_STATE: ElementState = {
-  found: false,
-  computedDisplay: null,
-  computedVisibility: null,
-  isDisabled: null,
-};
-
-const HIDDEN_STATE: ElementState = {
-  found: true,
+const HIDDEN_HANDLE: HandleState = {
   computedDisplay: "none",
   computedVisibility: "visible",
   isDisabled: false,
 };
 
+function makeMockHandle(
+  getState: () => HandleState,
+): ActionableHandle {
+  return {
+    evaluate: (_fn: unknown, ..._args: unknown[]) =>
+      Promise.resolve(getState()),
+    dispose: () => Promise.resolve(),
+  } as unknown as ActionableHandle;
+}
+
 function makeMockPage(opts: {
   waitForSelectorFn?: (
     selector: string,
     options?: { visible?: boolean; timeout?: number },
-  ) => Promise<unknown>;
-  evaluateState?: ElementState | (() => ElementState);
+  ) => Promise<ActionableHandle | null>;
+  handleState?: HandleState | (() => HandleState);
+  /** If false, `page.$()` returns null (element not in DOM). Default: true. */
+  elementExists?: boolean;
 }): ActionablePage {
+  const getState = (): HandleState => {
+    if (typeof opts.handleState === "function") return opts.handleState();
+    return opts.handleState ?? READY_HANDLE;
+  };
+
+  const exists = opts.elementExists ?? true;
+
   return {
     waitForSelector: opts.waitForSelectorFn ??
-      (() => Promise.resolve({})),
-    evaluate: (_fn: unknown, ..._args: unknown[]) => {
-      const state = typeof opts.evaluateState === "function"
-        ? opts.evaluateState()
-        : (opts.evaluateState ?? READY_STATE);
-      return Promise.resolve(state);
-    },
+      (() => Promise.resolve(makeMockHandle(getState))),
+    $: () =>
+      exists
+        ? Promise.resolve(makeMockHandle(getState))
+        : Promise.resolve(null),
   } as unknown as ActionablePage;
 }
 
@@ -68,16 +78,16 @@ function makeMockPage(opts: {
 // ---------------------------------------------------------------------------
 
 Deno.test("force: true returns immediately without calling evaluate", async () => {
-  let evaluateCalled = false;
+  let handleCreated = false;
   const page = makeMockPage({
-    evaluateState: () => {
-      evaluateCalled = true;
-      return READY_STATE;
+    handleState: () => {
+      handleCreated = true;
+      return READY_HANDLE;
     },
   });
 
   await waitForActionable(page, "#btn", { force: true });
-  assertEquals(evaluateCalled, false);
+  assertEquals(handleCreated, false);
 });
 
 // ---------------------------------------------------------------------------
@@ -85,7 +95,7 @@ Deno.test("force: true returns immediately without calling evaluate", async () =
 // ---------------------------------------------------------------------------
 
 Deno.test("passes when element is visible and enabled", async () => {
-  const page = makeMockPage({ evaluateState: READY_STATE });
+  const page = makeMockPage({ handleState: READY_HANDLE });
 
   const start = Date.now();
   await waitForActionable(page, "#btn", { timeout: 5000 });
@@ -102,9 +112,9 @@ Deno.test("retries until element becomes visible", async () => {
     waitForSelectorFn: () => {
       calls++;
       if (calls <= 2) return Promise.reject(new Error("timeout"));
-      return Promise.resolve({});
+      return Promise.resolve(makeMockHandle(() => READY_HANDLE));
     },
-    evaluateState: READY_STATE,
+    handleState: READY_HANDLE,
   });
 
   await waitForActionable(page, "#btn", { timeout: 5000 });
@@ -118,10 +128,10 @@ Deno.test("retries until element becomes visible", async () => {
 Deno.test("retries until element becomes enabled", async () => {
   let evaluateCalls = 0;
   const page = makeMockPage({
-    evaluateState: () => {
+    handleState: () => {
       evaluateCalls++;
-      if (evaluateCalls <= 2) return DISABLED_STATE;
-      return READY_STATE;
+      if (evaluateCalls <= 2) return DISABLED_HANDLE;
+      return READY_HANDLE;
     },
   });
 
@@ -139,7 +149,7 @@ Deno.test("retries until element becomes enabled", async () => {
 Deno.test("times out with ActionabilityError when element never visible", async () => {
   const page = makeMockPage({
     waitForSelectorFn: () => Promise.reject(new Error("timeout")),
-    evaluateState: NOT_FOUND_STATE,
+    elementExists: false,
   });
 
   const err = await assertRejects(
@@ -157,7 +167,7 @@ Deno.test("times out with ActionabilityError when element never visible", async 
 
 Deno.test("times out with ActionabilityError when element stays disabled", async () => {
   const page = makeMockPage({
-    evaluateState: DISABLED_STATE,
+    handleState: DISABLED_HANDLE,
   });
 
   const err = await assertRejects(
@@ -175,7 +185,7 @@ Deno.test("times out with ActionabilityError when element stays disabled", async
 Deno.test("times out with visible check when display is none", async () => {
   const page = makeMockPage({
     waitForSelectorFn: () => Promise.reject(new Error("timeout")),
-    evaluateState: HIDDEN_STATE,
+    handleState: HIDDEN_HANDLE,
   });
 
   const err = await assertRejects(
@@ -193,7 +203,7 @@ Deno.test("times out with visible check when display is none", async () => {
 Deno.test("error message includes selector and force hint", async () => {
   const page = makeMockPage({
     waitForSelectorFn: () => Promise.reject(new Error("timeout")),
-    evaluateState: NOT_FOUND_STATE,
+    elementExists: false,
   });
 
   const err = await assertRejects(
@@ -211,7 +221,7 @@ Deno.test("error message includes selector and force hint", async () => {
 
 Deno.test("diagnostics fully populated on timeout", async () => {
   const page = makeMockPage({
-    evaluateState: DISABLED_STATE,
+    handleState: DISABLED_HANDLE,
   });
 
   const err = await assertRejects(
@@ -238,9 +248,9 @@ Deno.test("checks: ['enabled'] skips visibility check", async () => {
   const page = makeMockPage({
     waitForSelectorFn: () => {
       waitForSelectorCalled = true;
-      return Promise.resolve({});
+      return Promise.resolve(makeMockHandle(() => READY_HANDLE));
     },
-    evaluateState: READY_STATE,
+    handleState: READY_HANDLE,
   });
 
   await waitForActionable(page, "#btn", {

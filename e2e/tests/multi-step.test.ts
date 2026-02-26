@@ -14,23 +14,17 @@ export const exampleDotComFlow = screenshotTest(
     ctx.log("Example.com loaded", { title });
     ctx.expect(title).toContain("Example Domain");
 
-    // Step 2: Verify the heading
-    const h1Text = await ctx.page.evaluate(
-      () => document.querySelector("h1")?.textContent ?? "",
-    );
-    ctx.log("Page heading", { text: h1Text });
-    ctx.expect(h1Text).toBe("Example Domain");
+    // Step 2: Verify heading using Phase 4 textContent (auto-waits for element)
+    await ctx.page.expectText("h1", "Example Domain");
+    ctx.log("Heading verified via expectText");
 
-    // Step 3: Click the "More information..." link and wait for navigation
-    await Promise.all([
-      ctx.page.raw.waitForNavigation({ waitUntil: "load" }),
-      ctx.page.raw.click("a"),
-    ]);
-    const newUrl = ctx.page.url();
-    ctx.log("Navigated to", { url: newUrl });
-    ctx.expect(newUrl).toContain("iana.org");
+    // Step 3: Click the link (auto-waits for actionability) and wait for navigation
+    await ctx.page.click("a");
+    await ctx.page.waitForURL("iana.org");
+    ctx.log("Navigated to IANA via waitForURL");
 
-    // Step 4: Verify IANA page loaded
+    // Step 4: Verify IANA page loaded using expectVisible
+    await ctx.page.expectVisible("body");
     const ianaTitle = await ctx.page.title();
     ctx.log("IANA page title", { title: ianaTitle });
     ctx.expect(ianaTitle.length).toBeGreaterThan(0);
@@ -55,21 +49,20 @@ export const hackerNewsNavigation = screenshotTest(
     ctx.log("Stories on page", { count: stories.length });
     ctx.expect(stories.length).toBeGreaterThan(0);
 
-    // Step 3: Click "More" link to load page 2
+    // Step 3: Click "More" and use waitForURL instead of manual URL check
     await ctx.page.click("a.morelink");
-    const page2Url = ctx.page.url();
-    ctx.log("Navigated to page 2", { url: page2Url });
-    ctx.expect(page2Url).toContain("p=2");
+    await ctx.page.waitForURL("p=2");
+    ctx.log("Navigated to page 2 via waitForURL");
 
-    // Step 4: Verify page 2 also has stories
+    // Step 4: Verify page 2 stories with expectVisible
+    await ctx.page.expectVisible(".athing");
     const page2Stories = await ctx.page.$$(".athing");
     ctx.log("Stories on page 2", { count: page2Stories.length });
     ctx.expect(page2Stories.length).toBeGreaterThan(0);
 
-    // Step 5: Click "new" link in the nav
+    // Step 5: Click "new" link and use waitForURL
     await ctx.page.click('a[href="newest"]');
-    const newestUrl = ctx.page.url();
-    ctx.log("Navigated to newest", { url: newestUrl });
-    ctx.expect(newestUrl).toContain("newest");
+    await ctx.page.waitForURL("newest");
+    ctx.log("Navigated to newest via waitForURL");
   },
 );
