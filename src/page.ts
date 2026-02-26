@@ -31,6 +31,9 @@ export type BrowserOptions = BrowserOptionsBase & (
   | { endpoint: string; launch?: never; executablePath?: never }
 );
 
+/** Auto-screenshot behavior. */
+export type ScreenshotMode = "off" | "on-failure" | "every-step";
+
 interface BrowserOptionsBase {
   /**
    * Optional var key whose runtime value is prepended to relative URLs in `goto()`.
@@ -43,6 +46,15 @@ interface BrowserOptionsBase {
   metrics?: boolean;
   /** Forward browser console output to `ctx.log()`/`ctx.warn()`. Default: true. */
   consoleForward?: boolean;
+  /**
+   * Auto-screenshot behavior.
+   * - `"off"` — no automatic screenshots
+   * - `"on-failure"` — capture a screenshot when a step or test fails (default)
+   * - `"every-step"` — capture after every goto/click/type AND on failure
+   */
+  screenshot?: ScreenshotMode;
+  /** Directory for auto-screenshots. Default: `".glubean/screenshots"`. */
+  screenshotDir?: string;
 }
 
 /**
@@ -52,6 +64,8 @@ interface BrowserOptionsBase {
  * keeping the plugin compatible across SDK versions via structural typing.
  */
 export interface BrowserTestContext {
+  /** Test identifier used for namespacing screenshots. */
+  testId?: string;
   trace(request: {
     name?: string;
     method: string;
@@ -105,7 +119,19 @@ export class GlubeanBrowser {
   async newPage(ctx: BrowserTestContext): Promise<GlubeanPage> {
     const browser = await this._getBrowser();
     const rawPage = await browser.newPage();
-    return GlubeanPage._create(rawPage, this._baseUrl, ctx, this._options);
+    // Read testId lazily from the runtime global — the harness updates it
+    // before each test runs, so reading at newPage() time is always fresh.
+    // deno-lint-ignore no-explicit-any
+    const runtimeTestId = (globalThis as any).__glubeanRuntime?.test?.id as
+      | string
+      | undefined;
+    return GlubeanPage._create(
+      rawPage,
+      this._baseUrl,
+      ctx,
+      this._options,
+      runtimeTestId,
+    );
   }
 
   /** Disconnect from the browser without closing it. Useful for remote Chrome. */
@@ -141,6 +167,10 @@ export class GlubeanPage {
   private readonly _baseUrl: string | undefined;
   private readonly _ctx: BrowserTestContext;
   private readonly _metricsEnabled: boolean;
+  private readonly _screenshotMode: ScreenshotMode;
+  private readonly _screenshotDir: string;
+  private readonly _testId: string;
+  private _stepCounter = 0;
   private _networkCleanup: (() => Promise<void>) | null = null;
 
   private constructor(
@@ -148,11 +178,17 @@ export class GlubeanPage {
     baseUrl: string | undefined,
     ctx: BrowserTestContext,
     metricsEnabled: boolean,
+    screenshotMode: ScreenshotMode,
+    screenshotDir: string,
+    testId: string,
   ) {
     this.raw = page;
     this._baseUrl = baseUrl;
     this._ctx = ctx;
     this._metricsEnabled = metricsEnabled;
+    this._screenshotMode = screenshotMode;
+    this._screenshotDir = screenshotDir;
+    this._testId = testId;
   }
 
   /** @internal */
@@ -161,12 +197,24 @@ export class GlubeanPage {
     baseUrl: string | undefined,
     ctx: BrowserTestContext,
     options: BrowserOptions,
+    runtimeTestId?: string,
   ): Promise<GlubeanPage> {
     const consoleForward = options.consoleForward ?? true;
     const networkTrace = options.networkTrace ?? true;
     const metricsEnabled = options.metrics ?? true;
+    const screenshotMode = options.screenshot ?? "on-failure";
+    const screenshotDir = options.screenshotDir ?? ".glubean/screenshots";
+    const testId = runtimeTestId ?? ctx.testId ?? "unknown";
 
-    const gp = new GlubeanPage(page, baseUrl, ctx, metricsEnabled);
+    const gp = new GlubeanPage(
+      page,
+      baseUrl,
+      ctx,
+      metricsEnabled,
+      screenshotMode,
+      screenshotDir,
+      testId,
+    );
 
     if (consoleForward) {
       page.on("console", (msg) => {
@@ -194,10 +242,81 @@ export class GlubeanPage {
     return gp;
   }
 
+  // ── Screenshot helpers ──────────────────────────────────────────────
+
+  private _formatTimestamp(): string {
+    return new Date().toISOString().replace(/[:.]/g, "").slice(0, 15);
+  }
+
+  private _sanitizeLabel(label: string): string {
+    return label.replace(/[^a-z0-9_-]/gi, "_").slice(0, 60);
+  }
+
+  private async _ensureDir(dir: string): Promise<void> {
+    try {
+      await Deno.mkdir(dir, { recursive: true });
+    } catch (e) {
+      if (!(e instanceof Deno.errors.AlreadyExists)) throw e;
+    }
+  }
+
+  private async _saveScreenshot(filename: string): Promise<string> {
+    const dir = `${this._screenshotDir}/${this._sanitizeLabel(this._testId)}`;
+    await this._ensureDir(dir);
+    const path = `${dir}/${filename}`;
+    // deno-lint-ignore no-explicit-any
+    await this.raw.screenshot({ path, fullPage: true } as any);
+    this._ctx.log(`[browser:screenshot] ${path}`);
+    return path;
+  }
+
+  private async _captureStep(action: string): Promise<void> {
+    if (this._screenshotMode !== "every-step") return;
+    this._stepCounter++;
+    const num = String(this._stepCounter).padStart(3, "0");
+    const ts = this._formatTimestamp();
+    await this._saveScreenshot(
+      `${num}-${this._sanitizeLabel(action)}-${ts}.png`,
+    );
+  }
+
+  private async _captureFailure(action: string): Promise<void> {
+    if (this._screenshotMode === "off") return;
+    this._stepCounter++;
+    const num = String(this._stepCounter).padStart(3, "0");
+    const ts = this._formatTimestamp();
+    try {
+      await this._saveScreenshot(
+        `FAIL-${num}-${this._sanitizeLabel(action)}-${ts}.png`,
+      );
+    } catch {
+      // best-effort — page may be in a broken state
+    }
+  }
+
+  /**
+   * Capture a screenshot for a test-level failure (e.g. assertion error).
+   *
+   * Call this in the fixture's catch block to get a final-state screenshot
+   * when the test body throws.
+   */
+  async screenshotOnFailure(): Promise<void> {
+    if (this._screenshotMode === "off") return;
+    const ts = this._formatTimestamp();
+    try {
+      await this._saveScreenshot(`FAIL-final-${ts}.png`);
+    } catch {
+      // best-effort
+    }
+  }
+
+  // ── Navigation & interaction ────────────────────────────────────────
+
   /**
    * Navigate to a URL. Relative paths are resolved against the configured `baseUrl`.
    *
    * Auto-emits a `ctx.trace()` event and (if enabled) Navigation Timing metrics.
+   * Captures a screenshot on failure or after every step (depending on config).
    */
   async goto(
     url: string,
@@ -212,9 +331,15 @@ export class GlubeanPage {
     const resolvedUrl = this._resolveUrl(url);
     const start = Date.now();
 
-    const response = await this.raw.goto(resolvedUrl, {
-      waitUntil: options?.waitUntil ?? "load",
-    });
+    let response;
+    try {
+      response = await this.raw.goto(resolvedUrl, {
+        waitUntil: options?.waitUntil ?? "load",
+      });
+    } catch (err) {
+      await this._captureFailure(`goto-${url}`);
+      throw err;
+    }
 
     const duration = Date.now() - start;
     const status = response?.status() ?? 0;
@@ -234,18 +359,38 @@ export class GlubeanPage {
         resolvedUrl,
       );
     }
+
+    await this._captureStep(`goto-${url}`);
   }
 
-  /** Click an element matching the selector. Waits for it to appear first. */
+  /**
+   * Click an element matching the selector. Waits for it to appear first.
+   * Captures a screenshot on failure or after every step (depending on config).
+   */
   async click(selector: string): Promise<void> {
-    await this.raw.waitForSelector(selector);
-    await this.raw.click(selector);
+    try {
+      await this.raw.waitForSelector(selector);
+      await this.raw.click(selector);
+    } catch (err) {
+      await this._captureFailure(`click-${selector}`);
+      throw err;
+    }
+    await this._captureStep(`click-${selector}`);
   }
 
-  /** Type text into an element matching the selector. Waits for it to appear first. */
+  /**
+   * Type text into an element matching the selector. Waits for it to appear first.
+   * Captures a screenshot on failure or after every step (depending on config).
+   */
   async type(selector: string, text: string): Promise<void> {
-    await this.raw.waitForSelector(selector);
-    await this.raw.type(selector, text);
+    try {
+      await this.raw.waitForSelector(selector);
+      await this.raw.type(selector, text);
+    } catch (err) {
+      await this._captureFailure(`type-${selector}`);
+      throw err;
+    }
+    await this._captureStep(`type-${selector}`);
   }
 
   /** Query a single element by selector. */

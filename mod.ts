@@ -39,4 +39,8 @@
 
 export { browser } from "./src/plugin.ts";
 export { GlubeanBrowser, GlubeanPage } from "./src/page.ts";
-export type { BrowserOptions, BrowserTestContext } from "./src/page.ts";
+export type {
+  BrowserOptions,
+  BrowserTestContext,
+  ScreenshotMode,
+} from "./src/page.ts";

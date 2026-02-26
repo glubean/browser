@@ -225,6 +225,53 @@ browser({ endpoint: "CHROME_ENDPOINT" })
 CHROME_ENDPOINT=https://chrome.browserless.io?token=...
 ```
 
+## Why Not Just Use Playwright?
+
+You absolutely can. Playwright is the best browser automation framework out there.
+
+But here's the thing: most teams don't *only* test browsers.
+
+You have API endpoints to verify. You have staging and production environments to
+monitor. You have data-driven scenarios to parametrize. You have secrets to manage.
+You have traces to review when something breaks at 2am.
+
+Playwright gives you a world-class browser. Glubean gives you the world around it.
+
+| | Playwright | Glubean + @glubean/browser |
+|---|---|---|
+| Browser testing | Best-in-class | Good — auto-waiting, auto-trace, screenshots |
+| API testing | Separate `request` context | First-class `ctx.http` with full tracing |
+| API + browser in one test | Two paradigms | Same `ctx`, same trace timeline |
+| Environment management | Manual env vars | `ctx.vars`, `ctx.secrets`, env switching |
+| Data-driven testing | DIY loops | `fromCsv`, `fromYaml` built-in |
+| Observability | Trace Viewer (local file) | Traces + metrics + dashboards (local & cloud) |
+| Run in production | Not designed for it | Built for it — monitoring, not just testing |
+| MCP / AI agent testing | No | Yes — protocol and behavior-level |
+
+### When to use Playwright instead
+
+- Cross-browser testing is a hard requirement (Firefox, Safari)
+- You're testing a complex SPA with deep DOM interactions (drag-drop, canvas, rich text editors)
+- Your entire test suite is browser-only and you need Locator chains
+
+### When to use Glubean
+
+- You test APIs **and** browser flows in the same suite
+- You run the same tests across dev / staging / prod
+- You want traces and metrics, not just pass/fail
+- You're already on Puppeteer and want better DX without switching ecosystems
+- You need to test MCP servers or AI agent behavior alongside browser flows
+
+### The honest trade-off
+
+Playwright wins on **browser DX** — Locators, cross-browser, codegen, visual regression.
+
+Glubean wins on **everything else** — and browser is just one plugin among many
+(HTTP, MCP, and more to come).
+
+If all you test is a browser, use Playwright. If your system has APIs, services,
+and a browser — use Glubean.
+
 ## License
 
 MIT
