@@ -129,6 +129,14 @@ export interface BrowserTestContext {
   ): void;
   log(message: string, data?: unknown): void;
   warn(condition: boolean, message: string): void;
+  /** Save an artifact file. Optional — present when SDK >= 0.13.0. */
+  saveArtifact?(
+    name: string,
+    content: string | Uint8Array,
+    options?: { type?: string; mimeType?: string },
+  ): Promise<string>;
+  /** Directory where artifacts are stored. Optional — present when SDK >= 0.13.0. */
+  readonly artifactDir?: string;
 }
 
 /**
@@ -327,6 +335,24 @@ export class GlubeanPage {
     filename: string,
     label: string,
   ): Promise<string> {
+    if (this._ctx.saveArtifact) {
+      // deno-lint-ignore no-explicit-any
+      const buffer = (await this.raw.screenshot({
+        fullPage: true,
+        encoding: "binary",
+      } as any)) as unknown as Uint8Array;
+      const id = await this._ctx.saveArtifact(filename, buffer, {
+        type: "screenshot",
+        mimeType: "image/png",
+      });
+      this._ctx.event({
+        type: "browser:screenshot",
+        data: { artifactId: id, label, fullPage: true },
+      });
+      return id;
+    }
+
+    // Legacy fallback: direct file write when saveArtifact is not available
     const dir = `${this._screenshotDir}/${this._sanitizeLabel(this._testId)}`;
     await this._ensureDir(dir);
     const path = `${dir}/${filename}`;
