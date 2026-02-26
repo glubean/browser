@@ -257,7 +257,10 @@ Deno.test({
 
       assertInstanceOf(err, ActionabilityError);
       assert(elapsed >= 800, `timed out too fast: ${elapsed}ms`);
-      assert(elapsed < 5000, `took too long: ${elapsed}ms — config not respected`);
+      assert(
+        elapsed < 5000,
+        `took too long: ${elapsed}ms — config not respected`,
+      );
     } finally {
       await page.close();
     }

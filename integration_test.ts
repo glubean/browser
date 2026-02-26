@@ -10,7 +10,7 @@
 import { assertEquals, assertStringIncludes } from "jsr:@std/assert";
 import { detectChromePath, launchChrome } from "./src/chrome.ts";
 import { GlubeanPage } from "./src/page.ts";
-import type { BrowserTestContext, BrowserOptions } from "./src/page.ts";
+import type { BrowserOptions, BrowserTestContext } from "./src/page.ts";
 import type { Browser } from "puppeteer-core";
 
 const chromeAvailable = !!detectChromePath();
@@ -65,7 +65,12 @@ Deno.test({
     const { ctx } = makeCtx();
     const browser = await getBrowser();
     const rawPage = await browser.newPage();
-    const page = await GlubeanPage._create(rawPage, undefined, ctx, defaultOptions);
+    const page = await GlubeanPage._create(
+      rawPage,
+      undefined,
+      ctx,
+      defaultOptions,
+    );
 
     try {
       await page.goto("data:text/html,<title>Hello</title><h1>World</h1>", {
@@ -93,7 +98,12 @@ Deno.test({
     const { ctx, traces } = makeCtx();
     const browser = await getBrowser();
     const rawPage = await browser.newPage();
-    const page = await GlubeanPage._create(rawPage, undefined, ctx, defaultOptions);
+    const page = await GlubeanPage._create(
+      rawPage,
+      undefined,
+      ctx,
+      defaultOptions,
+    );
 
     try {
       await page.goto("data:text/html,<h1>Trace</h1>");
@@ -122,7 +132,12 @@ Deno.test({
     const { ctx, logs } = makeCtx();
     const browser = await getBrowser();
     const rawPage = await browser.newPage();
-    const page = await GlubeanPage._create(rawPage, undefined, ctx, defaultOptions);
+    const page = await GlubeanPage._create(
+      rawPage,
+      undefined,
+      ctx,
+      defaultOptions,
+    );
 
     try {
       await page.goto(
@@ -132,7 +147,13 @@ Deno.test({
       await new Promise((r) => setTimeout(r, 500));
 
       const found = logs.some((l) => l.message.includes("glubean-test-msg"));
-      assertEquals(found, true, `Expected log containing "glubean-test-msg", got: ${JSON.stringify(logs)}`);
+      assertEquals(
+        found,
+        true,
+        `Expected log containing "glubean-test-msg", got: ${
+          JSON.stringify(logs)
+        }`,
+      );
     } finally {
       await page.close();
     }
@@ -169,7 +190,12 @@ Deno.test({
 
     const browser = await getBrowser();
     const rawPage = await browser.newPage();
-    const page = await GlubeanPage._create(rawPage, undefined, ctx, defaultOptions);
+    const page = await GlubeanPage._create(
+      rawPage,
+      undefined,
+      ctx,
+      defaultOptions,
+    );
 
     try {
       await page.goto(baseUrl, { waitUntil: "networkidle0" });
@@ -177,7 +203,11 @@ Deno.test({
       await new Promise((r) => setTimeout(r, 1000));
 
       const apiTrace = traces.find((t) => t.url.includes("/api/ping"));
-      assertEquals(apiTrace !== undefined, true, `Expected /api/ping trace, got: ${traces.map(t => t.url)}`);
+      assertEquals(
+        apiTrace !== undefined,
+        true,
+        `Expected /api/ping trace, got: ${traces.map((t) => t.url)}`,
+      );
       assertEquals(apiTrace!.status, 200);
       assertEquals(apiTrace!.method, "GET");
     } finally {
@@ -200,7 +230,12 @@ Deno.test({
     const { ctx } = makeCtx();
     const browser = await getBrowser();
     const rawPage = await browser.newPage();
-    const page = await GlubeanPage._create(rawPage, undefined, ctx, defaultOptions);
+    const page = await GlubeanPage._create(
+      rawPage,
+      undefined,
+      ctx,
+      defaultOptions,
+    );
 
     await page.goto("data:text/html,<h1>Close</h1>");
     await page.close();

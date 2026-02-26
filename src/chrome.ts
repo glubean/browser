@@ -70,7 +70,9 @@ export async function launchChrome(executablePath?: string): Promise<Browser> {
         "Install Chrome, or set the CHROME_PATH environment variable, " +
         "or pass executablePath in browser options.\n\n" +
         "Checked paths:\n" +
-        (WELL_KNOWN_PATHS[Deno.build.os === "windows" ? "win32" : Deno.build.os] ?? [])
+        (WELL_KNOWN_PATHS[
+          Deno.build.os === "windows" ? "win32" : Deno.build.os
+        ] ?? [])
           .map((p) => `  - ${p}`)
           .join("\n"),
     );

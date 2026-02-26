@@ -40,7 +40,9 @@ async function getBrowser(): Promise<Browser> {
 const server = chromeAvailable ? startTestServer() : null;
 const baseOpts: BrowserOptions = { launch: true };
 
-async function makePage(overrides?: { actionTimeout?: number }): Promise<GlubeanPage> {
+async function makePage(
+  overrides?: { actionTimeout?: number },
+): Promise<GlubeanPage> {
   const browser = await getBrowser();
   const rawPage = await browser.newPage();
   const opts: BrowserOptions = overrides

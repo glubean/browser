@@ -157,7 +157,10 @@ Deno.test("times out with ActionabilityError when element never visible", async 
   );
   assertInstanceOf(err, ActionabilityError);
   assertEquals(err.failedCheck, "attached");
-  assert(err.diagnostics.elapsed >= 400, `elapsed too short: ${err.diagnostics.elapsed}ms`);
+  assert(
+    err.diagnostics.elapsed >= 400,
+    `elapsed too short: ${err.diagnostics.elapsed}ms`,
+  );
   assertEquals(err.diagnostics.timeout, 500);
 });
 

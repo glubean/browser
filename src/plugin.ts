@@ -16,7 +16,7 @@
 import { definePlugin } from "@glubean/sdk/plugin";
 import type { GlubeanRuntime } from "@glubean/sdk";
 import type { Browser } from "puppeteer-core";
-import { GlubeanBrowser, type BrowserOptions } from "./page.ts";
+import { type BrowserOptions, GlubeanBrowser } from "./page.ts";
 import { connectChrome, launchChrome } from "./chrome.ts";
 
 /**

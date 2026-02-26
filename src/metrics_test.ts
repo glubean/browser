@@ -8,14 +8,15 @@ function makeMockPage(timing: {
 }) {
   return {
     evaluate: (_fn: unknown) => Promise.resolve(timing),
-  // deno-lint-ignore no-explicit-any
+    // deno-lint-ignore no-explicit-any
   } as any;
 }
 
 function makeBrokenPage() {
   return {
-    evaluate: () => Promise.reject(new Error("Execution context was destroyed")),
-  // deno-lint-ignore no-explicit-any
+    evaluate: () =>
+      Promise.reject(new Error("Execution context was destroyed")),
+    // deno-lint-ignore no-explicit-any
   } as any;
 }
 
@@ -24,7 +25,9 @@ function makeBrokenPage() {
 // ---------------------------------------------------------------------------
 
 Deno.test("collectNavigationMetrics: emits page_load_ms and dom_content_loaded_ms", async () => {
-  const emitted: Array<{ name: string; value: number; tags?: Record<string, string> }> = [];
+  const emitted: Array<
+    { name: string; value: number; tags?: Record<string, string> }
+  > = [];
 
   const page = makeMockPage({
     navigationStart: 1000,
@@ -65,7 +68,9 @@ Deno.test("collectNavigationMetrics: skips page_load_ms when loadEventEnd is 0",
 
   await collectNavigationMetrics(
     page,
-    (name, value) => { emitted.push({ name, value }); },
+    (name, value) => {
+      emitted.push({ name, value });
+    },
     "https://example.com/",
   );
 
@@ -89,7 +94,9 @@ Deno.test("collectNavigationMetrics: skips all when navigationStart is 0", async
 
   await collectNavigationMetrics(
     page,
-    (name) => { emitted.push({ name }); },
+    (name) => {
+      emitted.push({ name });
+    },
     "https://example.com/",
   );
 
@@ -105,7 +112,9 @@ Deno.test("collectNavigationMetrics: silently handles evaluate failure", async (
 
   await collectNavigationMetrics(
     makeBrokenPage(),
-    (name) => { emitted.push({ name }); },
+    (name) => {
+      emitted.push({ name });
+    },
     "https://example.com/",
   );
 
@@ -127,7 +136,9 @@ Deno.test("collectNavigationMetrics: shortens URL to pathname + search in tags",
 
   await collectNavigationMetrics(
     page,
-    (_name, _value, options) => { emitted.push({ tags: options?.tags }); },
+    (_name, _value, options) => {
+      emitted.push({ tags: options?.tags });
+    },
     "https://example.com/search?q=glubean&page=1",
   );
 

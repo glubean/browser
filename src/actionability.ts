@@ -76,13 +76,15 @@ export class ActionabilityError extends Error {
         `  visibility: ${diagnostics.computedVisibility ?? "unknown"}`,
       );
       lines.push(
-        `  disabled: ${diagnostics.isDisabled === null ? "unknown" : diagnostics.isDisabled}`,
+        `  disabled: ${
+          diagnostics.isDisabled === null ? "unknown" : diagnostics.isDisabled
+        }`,
       );
     }
 
     lines.push("");
     lines.push(
-      '  Hint: Use { force: true } to skip actionability checks.',
+      "  Hint: Use { force: true } to skip actionability checks.",
     );
 
     super(lines.join("\n"));

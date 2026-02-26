@@ -21,9 +21,19 @@ export type TraceFn = (trace: {
 
 const SKIP_PROTOCOLS = ["data:", "chrome-extension:", "devtools:", "blob:"];
 const SKIP_EXTENSIONS = [
-  ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".ico",
-  ".woff", ".woff2", ".ttf", ".eot",
-  ".css", ".map",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".svg",
+  ".webp",
+  ".ico",
+  ".woff",
+  ".woff2",
+  ".ttf",
+  ".eot",
+  ".css",
+  ".map",
 ];
 
 /** @internal Exported for testing. */
@@ -62,7 +72,10 @@ export async function attachNetworkTracer(
   const cdp: CDPSession = await page.createCDPSession();
   await cdp.send("Network.enable");
 
-  const pending = new Map<string, { method: string; url: string; startMs: number }>();
+  const pending = new Map<
+    string,
+    { method: string; url: string; startMs: number }
+  >();
 
   const onRequestWillBeSent = (params: {
     requestId: string;

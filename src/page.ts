@@ -12,7 +12,13 @@
  * @module page
  */
 
-import type { Browser, ElementHandle, Page } from "puppeteer-core";
+import type {
+  Browser,
+  ElementHandle,
+  HTTPRequest,
+  HTTPResponse,
+  Page,
+} from "puppeteer-core";
 import { attachNetworkTracer } from "./network.ts";
 import { collectNavigationMetrics } from "./metrics.ts";
 import {
@@ -32,13 +38,23 @@ import {
  * When `endpoint` resolves to `http://` / `https://`, the plugin auto-discovers
  * the WebSocket debugger URL via Chrome's `/json/version` endpoint.
  */
-export type BrowserOptions = BrowserOptionsBase & (
-  | { launch: true; executablePath?: string; endpoint?: never }
-  | { endpoint: string; launch?: never; executablePath?: never }
-);
+export type BrowserOptions =
+  & BrowserOptionsBase
+  & (
+    | { launch: true; executablePath?: string; endpoint?: never }
+    | { endpoint: string; launch?: never; executablePath?: never }
+  );
 
 /** Auto-screenshot behavior. */
 export type ScreenshotMode = "off" | "on-failure" | "every-step";
+
+/** Checks to apply in `expectResponse()`. */
+export interface ResponseChecks {
+  /** Expected status code, or a predicate. */
+  status?: number | ((s: number) => boolean);
+  /** Assert that response headers contain the given substrings. */
+  headerContains?: Record<string, string>;
+}
 
 interface BrowserOptionsBase {
   /**
@@ -307,7 +323,10 @@ export class GlubeanPage {
     }
   }
 
-  private async _saveScreenshot(filename: string, label: string): Promise<string> {
+  private async _saveScreenshot(
+    filename: string,
+    label: string,
+  ): Promise<string> {
     const dir = `${this._screenshotDir}/${this._sanitizeLabel(this._testId)}`;
     await this._ensureDir(dir);
     const path = `${dir}/${filename}`;
@@ -514,7 +533,11 @@ export class GlubeanPage {
         target: selector,
         duration,
         status: "ok",
-        detail: { textLength: text.length, autoWaitMs, force: options?.force ?? false },
+        detail: {
+          textLength: text.length,
+          autoWaitMs,
+          force: options?.force ?? false,
+        },
       });
       this._emitAutoWaitDiagnostics("type", selector, autoWaitMs);
     } catch (err) {
@@ -530,6 +553,215 @@ export class GlubeanPage {
       throw err;
     }
     await this._captureStep(`type-${selector}`);
+  }
+
+  /**
+   * Clear an input and type a new value.
+   *
+   * Unlike `type()` which appends, `fill()` first selects all existing text
+   * (triple-click) then types the replacement. Auto-waits for actionability.
+   */
+  async fill(
+    selector: string,
+    value: string,
+    options?: ActionOptions,
+  ): Promise<void> {
+    const start = Date.now();
+    try {
+      await waitForActionable(asActionablePage(this.raw), selector, {
+        timeout: options?.timeout ?? this._actionTimeout,
+        force: options?.force,
+      });
+      const autoWaitMs = Date.now() - start;
+      await this.raw.click(selector, { count: 3 });
+      await this.raw.keyboard.press("Backspace");
+      await this.raw.type(selector, value);
+      const duration = Date.now() - start;
+
+      this._ctx.action({
+        category: "browser:fill",
+        target: selector,
+        duration,
+        status: "ok",
+        detail: {
+          valueLength: value.length,
+          autoWaitMs,
+          force: options?.force ?? false,
+        },
+      });
+      this._emitAutoWaitDiagnostics("fill", selector, autoWaitMs);
+    } catch (err) {
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:fill",
+        target: selector,
+        duration,
+        status: err instanceof ActionabilityError ? "timeout" : "error",
+        detail: { valueLength: value.length, error: String(err) },
+      });
+      await this._captureFailure(`fill-${selector}`);
+      throw err;
+    }
+    await this._captureStep(`fill-${selector}`);
+  }
+
+  /**
+   * Hover over an element matching the selector.
+   *
+   * Auto-waits for the element to be attached, visible, and enabled.
+   */
+  async hover(selector: string, options?: ActionOptions): Promise<void> {
+    const start = Date.now();
+    try {
+      await waitForActionable(asActionablePage(this.raw), selector, {
+        timeout: options?.timeout ?? this._actionTimeout,
+        force: options?.force,
+      });
+      const autoWaitMs = Date.now() - start;
+      await this.raw.hover(selector);
+      const duration = Date.now() - start;
+
+      this._ctx.action({
+        category: "browser:hover",
+        target: selector,
+        duration,
+        status: "ok",
+        detail: { autoWaitMs, force: options?.force ?? false },
+      });
+      this._emitAutoWaitDiagnostics("hover", selector, autoWaitMs);
+    } catch (err) {
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:hover",
+        target: selector,
+        duration,
+        status: err instanceof ActionabilityError ? "timeout" : "error",
+        detail: { error: String(err) },
+      });
+      await this._captureFailure(`hover-${selector}`);
+      throw err;
+    }
+    await this._captureStep(`hover-${selector}`);
+  }
+
+  /**
+   * Select option(s) from a `<select>` element by value.
+   *
+   * Auto-waits for actionability. Returns the array of selected values.
+   */
+  async select(
+    selector: string,
+    ...values: string[]
+  ): Promise<string[]> {
+    const start = Date.now();
+    try {
+      await waitForActionable(asActionablePage(this.raw), selector, {
+        timeout: this._actionTimeout,
+      });
+      const autoWaitMs = Date.now() - start;
+      const selected = await this.raw.select(selector, ...values);
+      const duration = Date.now() - start;
+
+      this._ctx.action({
+        category: "browser:select",
+        target: selector,
+        duration,
+        status: "ok",
+        detail: { values, selected, autoWaitMs },
+      });
+      this._emitAutoWaitDiagnostics("select", selector, autoWaitMs);
+      return selected;
+    } catch (err) {
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:select",
+        target: selector,
+        duration,
+        status: err instanceof ActionabilityError ? "timeout" : "error",
+        detail: { values, error: String(err) },
+      });
+      await this._captureFailure(`select-${selector}`);
+      throw err;
+    }
+  }
+
+  /**
+   * Press a keyboard key (e.g. `"Enter"`, `"Tab"`, `"Escape"`).
+   *
+   * Operates at the keyboard level — no selector or auto-wait needed.
+   */
+  async press(
+    key: string,
+    options?: { text?: string },
+  ): Promise<void> {
+    const start = Date.now();
+    try {
+      // deno-lint-ignore no-explicit-any
+      await this.raw.keyboard.press(key as any, options);
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:press",
+        target: key,
+        duration,
+        status: "ok",
+      });
+    } catch (err) {
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:press",
+        target: key,
+        duration,
+        status: "error",
+        detail: { error: String(err) },
+      });
+      throw err;
+    }
+  }
+
+  /**
+   * Upload files to a file input element.
+   *
+   * Auto-waits for the `<input type="file">` to be actionable, then
+   * attaches the specified files via `ElementHandle.uploadFile()`.
+   */
+  async upload(
+    selector: string,
+    ...filePaths: string[]
+  ): Promise<void> {
+    const start = Date.now();
+    try {
+      await waitForActionable(asActionablePage(this.raw), selector, {
+        timeout: this._actionTimeout,
+      });
+      const autoWaitMs = Date.now() - start;
+      const handle = await this.raw.$(selector);
+      if (!handle) throw new Error(`upload: element "${selector}" not found`);
+      // deno-lint-ignore no-explicit-any
+      await (handle as any).uploadFile(...filePaths);
+      await handle.dispose();
+      const duration = Date.now() - start;
+
+      this._ctx.action({
+        category: "browser:upload",
+        target: selector,
+        duration,
+        status: "ok",
+        detail: { fileCount: filePaths.length, autoWaitMs },
+      });
+      this._emitAutoWaitDiagnostics("upload", selector, autoWaitMs);
+    } catch (err) {
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:upload",
+        target: selector,
+        duration,
+        status: err instanceof ActionabilityError ? "timeout" : "error",
+        detail: { fileCount: filePaths.length, error: String(err) },
+      });
+      await this._captureFailure(`upload-${selector}`);
+      throw err;
+    }
+    await this._captureStep(`upload-${selector}`);
   }
 
   /** Query a single element by selector. */
@@ -669,7 +901,10 @@ export class GlubeanPage {
     try {
       await this.raw.waitForSelector(selector, { timeout });
       // deno-lint-ignore no-explicit-any
-      const result = await this.raw.$eval(selector, (el: any) => el.textContent);
+      const result = await this.raw.$eval(
+        selector,
+        (el: any) => el.textContent,
+      );
       this._ctx.action({
         category: "browser:wait",
         target: `textContent("${selector}")`,
@@ -770,7 +1005,10 @@ export class GlubeanPage {
     try {
       await this.raw.waitForSelector(selector, { timeout });
       // deno-lint-ignore no-explicit-any
-      const result = await this.raw.$eval(selector, (el: any) => el.value ?? "");
+      const result = await this.raw.$eval(
+        selector,
+        (el: any) => el.value ?? "",
+      );
       this._ctx.action({
         category: "browser:wait",
         target: `inputValue("${selector}")`,
@@ -897,11 +1135,15 @@ export class GlubeanPage {
     try {
       lastVal = await this._retryUntil(
         // deno-lint-ignore no-explicit-any
-        () => this.raw.$eval(selector, (el: any) => el.textContent as string | null).catch(() => null),
+        () =>
+          this.raw.$eval(selector, (el: any) => el.textContent as string | null)
+            .catch(() => null),
         matches,
         (lv) =>
           `expectText("${selector}"): expected ${JSON.stringify(expected)} ` +
-          `but received ${JSON.stringify(lv)} after ${options?.timeout ?? 5_000}ms`,
+          `but received ${JSON.stringify(lv)} after ${
+            options?.timeout ?? 5_000
+          }ms`,
         options,
       );
       this._ctx.action({
@@ -917,7 +1159,11 @@ export class GlubeanPage {
         target: `expectText("${selector}")`,
         duration: Date.now() - start,
         status: "timeout",
-        detail: { expected: String(expected), actual: lastVal, error: String(err) },
+        detail: {
+          expected: String(expected),
+          actual: lastVal,
+          error: String(err),
+        },
       });
       throw err;
     }
@@ -1022,8 +1268,12 @@ export class GlubeanPage {
           ).catch(() => null),
         matches,
         (lv) =>
-          `expectAttribute("${selector}", "${attr}"): expected ${JSON.stringify(expected)} ` +
-          `but received ${JSON.stringify(lv)} after ${options?.timeout ?? 5_000}ms`,
+          `expectAttribute("${selector}", "${attr}"): expected ${
+            JSON.stringify(expected)
+          } ` +
+          `but received ${JSON.stringify(lv)} after ${
+            options?.timeout ?? 5_000
+          }ms`,
         options,
       );
       this._ctx.action({
@@ -1039,7 +1289,11 @@ export class GlubeanPage {
         target: `expectAttribute("${selector}", "${attr}")`,
         duration: Date.now() - start,
         status: "timeout",
-        detail: { expected: String(expected), actual: lastVal, error: String(err) },
+        detail: {
+          expected: String(expected),
+          actual: lastVal,
+          error: String(err),
+        },
       });
       throw err;
     }
@@ -1079,6 +1333,177 @@ export class GlubeanPage {
         status: "timeout",
         detail: { expected, actual: lastCount, error: String(err) },
       });
+      throw err;
+    }
+  }
+
+  // ── Phase 8: Network Interception & Assertions ────────────────────
+
+  /**
+   * Wait for a network request matching `pattern`.
+   *
+   * @param pattern URL string, RegExp, or predicate function.
+   * @returns The matched `HTTPRequest`.
+   */
+  async waitForRequest(
+    pattern: string | RegExp | ((req: HTTPRequest) => boolean),
+    options?: { timeout?: number },
+  ): Promise<HTTPRequest> {
+    const timeout = options?.timeout ?? this._actionTimeout;
+    const label = typeof pattern === "function"
+      ? "(predicate)"
+      : String(pattern);
+    const start = Date.now();
+    try {
+      // deno-lint-ignore no-explicit-any
+      const predicate: any = typeof pattern === "string"
+        ? (req: HTTPRequest) => req.url().includes(pattern)
+        : pattern instanceof RegExp
+        ? (req: HTTPRequest) => pattern.test(req.url())
+        : pattern;
+      const req = await this.raw.waitForRequest(predicate, { timeout });
+      this._ctx.action({
+        category: "browser:wait",
+        target: `waitForRequest(${label})`,
+        duration: Date.now() - start,
+        status: "ok",
+        detail: { url: req.url(), method: req.method() },
+      });
+      return req;
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:wait",
+        target: `waitForRequest(${label})`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { error: String(err) },
+      });
+      throw err;
+    }
+  }
+
+  /**
+   * Wait for a network response matching `pattern`.
+   *
+   * @param pattern URL string, RegExp, or predicate function.
+   * @returns The matched `HTTPResponse`.
+   */
+  async waitForResponse(
+    pattern: string | RegExp | ((res: HTTPResponse) => boolean),
+    options?: { timeout?: number },
+  ): Promise<HTTPResponse> {
+    const timeout = options?.timeout ?? this._actionTimeout;
+    const label = typeof pattern === "function"
+      ? "(predicate)"
+      : String(pattern);
+    const start = Date.now();
+    try {
+      // deno-lint-ignore no-explicit-any
+      const predicate: any = typeof pattern === "string"
+        ? (res: HTTPResponse) => res.url().includes(pattern)
+        : pattern instanceof RegExp
+        ? (res: HTTPResponse) => pattern.test(res.url())
+        : pattern;
+      const res = await this.raw.waitForResponse(predicate, { timeout });
+      this._ctx.action({
+        category: "browser:wait",
+        target: `waitForResponse(${label})`,
+        duration: Date.now() - start,
+        status: "ok",
+        detail: { url: res.url(), status: res.status() },
+      });
+      return res;
+    } catch (err) {
+      this._ctx.action({
+        category: "browser:wait",
+        target: `waitForResponse(${label})`,
+        duration: Date.now() - start,
+        status: "timeout",
+        detail: { error: String(err) },
+      });
+      throw err;
+    }
+  }
+
+  /**
+   * Assert that a network response matching `pattern` satisfies `checks`.
+   *
+   * Waits for the response, then validates status and/or headers.
+   * Emits a `browser:assert` action.
+   *
+   * @example
+   * ```ts
+   * await page.click("#submit");
+   * await page.expectResponse("/api/login", { status: 200 });
+   * ```
+   */
+  async expectResponse(
+    pattern: string | RegExp | ((res: HTTPResponse) => boolean),
+    checks?: ResponseChecks,
+    options?: { timeout?: number },
+  ): Promise<HTTPResponse> {
+    const label = typeof pattern === "function"
+      ? "(predicate)"
+      : String(pattern);
+    const start = Date.now();
+    try {
+      const res = await this.waitForResponse(pattern, options);
+      const failures: string[] = [];
+
+      if (checks?.status !== undefined) {
+        const s = res.status();
+        const ok = typeof checks.status === "function"
+          ? checks.status(s)
+          : s === checks.status;
+        if (!ok) failures.push(`status ${s} did not match ${checks.status}`);
+      }
+
+      if (checks?.headerContains) {
+        const headers = res.headers();
+        for (const [key, expected] of Object.entries(checks.headerContains)) {
+          const actual = headers[key.toLowerCase()];
+          if (!actual || !actual.includes(expected)) {
+            const display = actual ?? "(missing)";
+            failures.push(
+              "header " + JSON.stringify(key) + ": expected " +
+                JSON.stringify(expected) + ", got " + JSON.stringify(display),
+            );
+          }
+        }
+      }
+
+      if (failures.length > 0) {
+        const msg = "expectResponse(" + label + "): " + failures.join("; ");
+        this._ctx.action({
+          category: "browser:assert",
+          target: "expectResponse(" + label + ")",
+          duration: Date.now() - start,
+          status: "error",
+          detail: { url: res.url(), httpStatus: res.status(), failures },
+        });
+        throw new Error(msg);
+      }
+
+      this._ctx.action({
+        category: "browser:assert",
+        target: `expectResponse(${label})`,
+        duration: Date.now() - start,
+        status: "ok",
+        detail: { url: res.url(), httpStatus: res.status() },
+      });
+      return res;
+    } catch (err) {
+      if (
+        !(err instanceof Error && err.message.startsWith("expectResponse("))
+      ) {
+        this._ctx.action({
+          category: "browser:assert",
+          target: `expectResponse(${label})`,
+          duration: Date.now() - start,
+          status: "timeout",
+          detail: { error: String(err) },
+        });
+      }
       throw err;
     }
   }

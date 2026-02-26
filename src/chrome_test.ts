@@ -1,4 +1,8 @@
-import { assertEquals, assertRejects, assertStringIncludes } from "jsr:@std/assert";
+import {
+  assertEquals,
+  assertRejects,
+  assertStringIncludes,
+} from "jsr:@std/assert";
 import { resolveEndpoint } from "./chrome.ts";
 
 // ---------------------------------------------------------------------------
@@ -20,7 +24,11 @@ Deno.test("resolveEndpoint: http:// auto-discovers WS URL", async () => {
   const originalFetch = globalThis.fetch;
 
   globalThis.fetch = (input: string | URL | Request) => {
-    const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+    const url = typeof input === "string"
+      ? input
+      : input instanceof URL
+      ? input.toString()
+      : input.url;
     assertEquals(url, "http://localhost:9222/json/version");
     return Promise.resolve(
       new Response(JSON.stringify({ webSocketDebuggerUrl: expectedWs }), {
@@ -43,7 +51,11 @@ Deno.test("resolveEndpoint: http:// strips trailing slash", async () => {
   let fetchedUrl = "";
 
   globalThis.fetch = (input: string | URL | Request) => {
-    fetchedUrl = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+    fetchedUrl = typeof input === "string"
+      ? input
+      : input instanceof URL
+      ? input.toString()
+      : input.url;
     return Promise.resolve(
       new Response(JSON.stringify({ webSocketDebuggerUrl: "ws://x" }), {
         status: 200,
@@ -67,7 +79,9 @@ Deno.test("resolveEndpoint: http:// fetch failure gives clear error", async () =
   };
 
   try {
-    const err = await assertRejects(() => resolveEndpoint("http://localhost:9222"));
+    const err = await assertRejects(() =>
+      resolveEndpoint("http://localhost:9222")
+    );
     assertStringIncludes((err as Error).message, "Failed to connect to Chrome");
     assertStringIncludes((err as Error).message, "--remote-debugging-port");
   } finally {
@@ -83,7 +97,9 @@ Deno.test("resolveEndpoint: http:// non-200 response", async () => {
   };
 
   try {
-    const err = await assertRejects(() => resolveEndpoint("http://localhost:9222"));
+    const err = await assertRejects(() =>
+      resolveEndpoint("http://localhost:9222")
+    );
     assertStringIncludes((err as Error).message, "HTTP 404");
   } finally {
     globalThis.fetch = originalFetch;
@@ -100,8 +116,13 @@ Deno.test("resolveEndpoint: http:// missing webSocketDebuggerUrl field", async (
   };
 
   try {
-    const err = await assertRejects(() => resolveEndpoint("http://localhost:9222"));
-    assertStringIncludes((err as Error).message, "did not return a webSocketDebuggerUrl");
+    const err = await assertRejects(() =>
+      resolveEndpoint("http://localhost:9222")
+    );
+    assertStringIncludes(
+      (err as Error).message,
+      "did not return a webSocketDebuggerUrl",
+    );
   } finally {
     globalThis.fetch = originalFetch;
   }

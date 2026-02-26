@@ -1,4 +1,4 @@
-import { configure, test, type ExtensionFn } from "@glubean/sdk";
+import { configure, type ExtensionFn, test } from "@glubean/sdk";
 import { browser, type GlubeanPage } from "@glubean/browser";
 
 const config = configure({

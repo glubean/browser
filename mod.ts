@@ -44,6 +44,7 @@ export type {
   BrowserEvent,
   BrowserOptions,
   BrowserTestContext,
+  ResponseChecks,
   ScreenshotMode,
 } from "./src/page.ts";
 export { ActionabilityError } from "./src/actionability.ts";
