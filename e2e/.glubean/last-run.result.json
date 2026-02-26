@@ -1,0 +1,942 @@
+{
+  "target": "./tests",
+  "files": [
+    "tests/landing.test.ts"
+  ],
+  "runAt": "2026-02-26 09:03:24",
+  "summary": {
+    "total": 4,
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "durationMs": 18999,
+    "stats": {
+      "httpRequestTotal": 0,
+      "httpErrorTotal": 0,
+      "assertionTotal": 7,
+      "assertionFailed": 0,
+      "warningTotal": 0,
+      "warningTriggered": 0,
+      "stepTotal": 0,
+      "stepPassed": 0,
+      "stepFailed": 0
+    }
+  },
+  "tests": [
+    {
+      "testId": "landing-get-started-section",
+      "testName": "Get-started steps section exists",
+      "tags": [
+        "landing",
+        "content"
+      ],
+      "success": true,
+      "durationMs": 4188,
+      "events": [
+        {
+          "type": "log",
+          "message": "Loading test module: file:///Users/peisong/glubean/browser/e2e/tests/landing.test.ts"
+        },
+        {
+          "type": "start",
+          "id": "landing-get-started-section",
+          "name": "Get-started steps section exists",
+          "tags": [
+            "landing",
+            "content"
+          ]
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /",
+            "method": "GET",
+            "url": "https://www.glubean.com/",
+            "status": 200,
+            "duration": 1017
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/1-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/1-1920.avif",
+            "status": 200,
+            "duration": 509
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 796
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 807
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 809
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/5-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/5-1920.avif",
+            "status": 200,
+            "duration": 357
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 834
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 843
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/4-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/4-1920.avif",
+            "status": 200,
+            "duration": 366
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/3-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/3-1920.avif",
+            "status": 200,
+            "duration": 428
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/2-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/2-1920.avif",
+            "status": 200,
+            "duration": 480
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1019
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1036
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] Navigate https://glubean.com",
+            "method": "GET",
+            "url": "https://glubean.com",
+            "status": 200,
+            "duration": 3425
+          }
+        },
+        {
+          "type": "metric",
+          "name": "page_load_ms",
+          "value": 3390,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "metric",
+          "name": "dom_content_loaded_ms",
+          "value": 2815,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected \"Glubean\\nDocs\\nVS Code\\nCookbook\\nGitHub\\nAPI collections,\\...\" to contain \"Get started\"",
+          "actual": "Glubean\nDocs\nVS Code\nCookbook\nGitHub\nAPI collections,\nasrealcode\n\nWrite API tests in TypeScript — or let AI write them for you. Click play, see every trace, debug with real breakpoints, promote to CI when ready.\n\nInstall for VS Code\nAsk AI about Glubean\n\nFree forever. No account. No cloud required.\n\nSee it in action\n41s\nWatch AI generate a test\nTypeScript test file with inline play button and live trace viewer\n\nClick ▶ to run — trace opens instantly beside your code\n\nGet started in 3 steps\n\nNo account. No API key. Never leave VS Code.\n\n1\nInstall the extension\nMarketplace\nDownload VSIX\nManual CLI\n\nSearch glubean in VS Code, Cursor, or any compatible editor — or view in Marketplace. One click install, zero config. Deno and the CLI are installed automatically on first run.\n\nThen create a project and scaffold:\n\n$ mkdir my-project && cd my-project\n$ glubean init\n\nOr clone the Cookbook for ready-to-run patterns:\n\n$ git clone https://github.com/glubean/cookbook\n$ cd cookbook\n2\nWrite your API calls\n\nCreate a .test.ts file — or let your AI write it. The SDK is typed and AI-friendly, so generated tests actually work on the first try.\n\nSimple\nMulti-step\nData-driven\nPick & Run\nAdvanced Config\nSchema Validation\nAny NPM Libraries\nimport { test } from \"jsr:@glubean/sdk\";\n\ntest(\"list products\", async (ctx) => {\n  const base = ctx.vars.require(\"BASE_URL\");\n\n  const data = await ctx.http\n    .get(`${base}/products?limit=5`)\n    .json();\n\n  ctx.expect(data.products.length).toBe(5);\n  ctx.log(`Found ${data.total} products`);\n});\nExplore the full SDK\n3\nClick play\n\nHit the ▶ button in the gutter. The trace opens automatically — full request, response, headers, timing. Debug with breakpoints. Compare runs with diff. From here on, it's just write → run → iterate.\n\nYour folders are your collections\n\nNo proprietary format. Organize API calls the way you organize code.\n\nPROJECT STRUCTURE\n\nmy-api/\n├── tests/       ← permanent\n│   ├── auth.test.ts\n│   └── products.test.ts\n├── explore/     ← scratch pad\n│   └── new-api.test.ts\n├── data/        ← test data\n│   ├── users.json\n│   └── regions/\n├── context/     ← for AI\n│   └── openapi.json\n├── .env\n├── .env.staging\n└── deno.json\n\ntests/ and explore/\n\nExplore APIs in explore/. Promote to tests/ when solid. Same code, different lifecycle.\n\ndata/ for test data\n\nLoad from JSON, CSV, YAML, or entire directories. File-based data keeps tests clean and diffs reviewable.\n\ncontext/ for AI\n\nDrop your OpenAPI spec here. AI agents read it and generate tests that match your API.\n\nReal TypeScript\n\nVariables, loops, conditionals, assertions — not a config file. Version control just works.\n\nLet AI write the first draft\n\nOne sentence is enough. AI reads your project and generates a working test.\n\nYOU TYPE\n\n“please create github repo list tests in the explore folder”\n\nAI reads your project context and generates a working test\nexplore/github.test.ts\nAI-generated\nimport { test } from \"@glubean/sdk\";\n\nexport const listUserRepos = test(\n  { id: \"github-list-repos\", tags: [\"explore\"] },\n  async (ctx) => {\n    const username = ctx.vars.require(\"GITHUB_USERNAME\");\n    const token = ctx.vars.get(\"GITHUB_TOKEN\");\n\n    const headers: Record<string, string> = {\n      Accept: \"application/vnd.github+json\",\n    };\n    if (token) {\n      headers[\"Authorization\"] = `Bearer ${token}`;\n    }\n\n    const data = await ctx.http\n      .get(`https://api.github.com/users/${username}/repos`)\n      .json();\n\n    ctx.expect(data.length).toBeGreaterThan(0);\n    ctx.log(\"Repos\", data.slice(0, 3));\n  },\n);\n\nOne sentence. One file. Click ▶. Done. — Learn more\n\nEverything you need, nothing you don't\n— without leaving your editor\n\nOpen source. Works offline. No login, no telemetry.\n\nInline play buttons\n\nClick ▶ next to any test in the gutter. Results stream into the Test Results panel in real time. Run one test, a file, or the entire workspace.\n\nTrace files\n\nEvery request/response pair in structured JSONC. Auto-opens after each run. Browse history with Alt+[ / Alt+] — compare any two traces with diff.\n\nBreakpoint debugging\n\nSet breakpoints in your API calls. Inspect variables. Step through code.\n\nDiff any two runs\n\nCompare responses with VS Code's native side-by-side diff viewer. See exactly what changed between two runs — headers, body, status codes.\n\nEnvironment switching\n\nOne-click switch between .env files in the status bar. Secrets live in a separate .env.secrets that stays gitignored — commit your config, never your credentials.\n\nGit-native workflow\n\nTests are TypeScript files. PR review, branch, merge — version control just works.\n\nAI-ready by design\n\nGlubean SDK is built so AI gets it right the first time — typed APIs, structured patterns, and built-in guardrails. Just ask your AI to write a test.\n\nExplore today, test forever\n\nStart by exploring an API in the explore/ directory. Add assertions when you're ready. Move the file to tests/ — zero effort to promote an exploration into a permanent verification.\n\nLet AI generate the data-driven variants. You review and promote.\n\nExplore\n\nexplore/get.test.ts\n\nTest\n\ntests/get.test.ts\n\nAutomate\n\n↓\n\nFree forever\n\nglubean run --ci\n\nGitHub Actions, GitLab CI...\n\nComing soon\n\nGlubean Cloud\n\nScheduled runs, dashboards\n\nHow it compares\n\nA different approach to API tooling.\n\n\tGlubean\tGUI Collections\tHTTP File Senders\nRuntime\tVS Code extension\tStandalone app\tVS Code extension\nTest format\tReal TypeScript\tGUI / DSL\tPlain-text config\nBreakpoint debugging\tYes — VS Code debugger\tconsole.log()\tNo\nDiff two responses\tNative editor diff\tNo\tNo\nSchema validation\tZod / Valibot built-in\tVia plugins\tNo\nVersion control\tGit-native\tExport / import\tYes\nCI / CD\tSame file, zero migration\tSeparate runner + export\tManual scripting\nAI-generated tests\tTyped SDK, works first try\tNo\tNo\nSee the full comparison\nWorks with what you already have — or nothing at all\n\nHave Postman collections or an OpenAPI spec? Drop the file into a Glubean project and let AI convert it. Starting from scratch? Just tell AI which API to test — no import files needed. Either way, you get typed tests in minutes.\n\nNo files? No problem\n\nTell AI \"test the GitHub repos API\" and it writes a working Glubean test. Any public API, zero prerequisites.\n\nHave Postman / OpenAPI?\n\nDrop your export file in the project. AI reads the source and batch-converts endpoints into typed tests.\n\nLock the pattern, scale fast\n\nDecide auth model, assertion depth, and file structure once. AI applies it consistently across the rest.\n\nTest any API in 2 minutes\nMigration guide\nComing soon\nGlubean Cloud\n\nScheduled verification runs, persistent history with structured traces, team dashboards, and safe secrets management. Same test files — executed and governed in the cloud.\n\nJoin waitlist\n\nNo spam. We'll only email when Cloud launches.\n\nGlubean\nDocs\nGitHub\nVS Code\nJSR\nContact",
+          "expected": "Get started"
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected \"Glubean\\nDocs\\nVS Code\\nCookbook\\nGitHub\\nAPI collections,\\...\" to contain \"Install the extension\"",
+          "actual": "Glubean\nDocs\nVS Code\nCookbook\nGitHub\nAPI collections,\nasrealcode\n\nWrite API tests in TypeScript — or let AI write them for you. Click play, see every trace, debug with real breakpoints, promote to CI when ready.\n\nInstall for VS Code\nAsk AI about Glubean\n\nFree forever. No account. No cloud required.\n\nSee it in action\n41s\nWatch AI generate a test\nTypeScript test file with inline play button and live trace viewer\n\nClick ▶ to run — trace opens instantly beside your code\n\nGet started in 3 steps\n\nNo account. No API key. Never leave VS Code.\n\n1\nInstall the extension\nMarketplace\nDownload VSIX\nManual CLI\n\nSearch glubean in VS Code, Cursor, or any compatible editor — or view in Marketplace. One click install, zero config. Deno and the CLI are installed automatically on first run.\n\nThen create a project and scaffold:\n\n$ mkdir my-project && cd my-project\n$ glubean init\n\nOr clone the Cookbook for ready-to-run patterns:\n\n$ git clone https://github.com/glubean/cookbook\n$ cd cookbook\n2\nWrite your API calls\n\nCreate a .test.ts file — or let your AI write it. The SDK is typed and AI-friendly, so generated tests actually work on the first try.\n\nSimple\nMulti-step\nData-driven\nPick & Run\nAdvanced Config\nSchema Validation\nAny NPM Libraries\nimport { test } from \"jsr:@glubean/sdk\";\n\ntest(\"list products\", async (ctx) => {\n  const base = ctx.vars.require(\"BASE_URL\");\n\n  const data = await ctx.http\n    .get(`${base}/products?limit=5`)\n    .json();\n\n  ctx.expect(data.products.length).toBe(5);\n  ctx.log(`Found ${data.total} products`);\n});\nExplore the full SDK\n3\nClick play\n\nHit the ▶ button in the gutter. The trace opens automatically — full request, response, headers, timing. Debug with breakpoints. Compare runs with diff. From here on, it's just write → run → iterate.\n\nYour folders are your collections\n\nNo proprietary format. Organize API calls the way you organize code.\n\nPROJECT STRUCTURE\n\nmy-api/\n├── tests/       ← permanent\n│   ├── auth.test.ts\n│   └── products.test.ts\n├── explore/     ← scratch pad\n│   └── new-api.test.ts\n├── data/        ← test data\n│   ├── users.json\n│   └── regions/\n├── context/     ← for AI\n│   └── openapi.json\n├── .env\n├── .env.staging\n└── deno.json\n\ntests/ and explore/\n\nExplore APIs in explore/. Promote to tests/ when solid. Same code, different lifecycle.\n\ndata/ for test data\n\nLoad from JSON, CSV, YAML, or entire directories. File-based data keeps tests clean and diffs reviewable.\n\ncontext/ for AI\n\nDrop your OpenAPI spec here. AI agents read it and generate tests that match your API.\n\nReal TypeScript\n\nVariables, loops, conditionals, assertions — not a config file. Version control just works.\n\nLet AI write the first draft\n\nOne sentence is enough. AI reads your project and generates a working test.\n\nYOU TYPE\n\n“please create github repo list tests in the explore folder”\n\nAI reads your project context and generates a working test\nexplore/github.test.ts\nAI-generated\nimport { test } from \"@glubean/sdk\";\n\nexport const listUserRepos = test(\n  { id: \"github-list-repos\", tags: [\"explore\"] },\n  async (ctx) => {\n    const username = ctx.vars.require(\"GITHUB_USERNAME\");\n    const token = ctx.vars.get(\"GITHUB_TOKEN\");\n\n    const headers: Record<string, string> = {\n      Accept: \"application/vnd.github+json\",\n    };\n    if (token) {\n      headers[\"Authorization\"] = `Bearer ${token}`;\n    }\n\n    const data = await ctx.http\n      .get(`https://api.github.com/users/${username}/repos`)\n      .json();\n\n    ctx.expect(data.length).toBeGreaterThan(0);\n    ctx.log(\"Repos\", data.slice(0, 3));\n  },\n);\n\nOne sentence. One file. Click ▶. Done. — Learn more\n\nEverything you need, nothing you don't\n— without leaving your editor\n\nOpen source. Works offline. No login, no telemetry.\n\nInline play buttons\n\nClick ▶ next to any test in the gutter. Results stream into the Test Results panel in real time. Run one test, a file, or the entire workspace.\n\nTrace files\n\nEvery request/response pair in structured JSONC. Auto-opens after each run. Browse history with Alt+[ / Alt+] — compare any two traces with diff.\n\nBreakpoint debugging\n\nSet breakpoints in your API calls. Inspect variables. Step through code.\n\nDiff any two runs\n\nCompare responses with VS Code's native side-by-side diff viewer. See exactly what changed between two runs — headers, body, status codes.\n\nEnvironment switching\n\nOne-click switch between .env files in the status bar. Secrets live in a separate .env.secrets that stays gitignored — commit your config, never your credentials.\n\nGit-native workflow\n\nTests are TypeScript files. PR review, branch, merge — version control just works.\n\nAI-ready by design\n\nGlubean SDK is built so AI gets it right the first time — typed APIs, structured patterns, and built-in guardrails. Just ask your AI to write a test.\n\nExplore today, test forever\n\nStart by exploring an API in the explore/ directory. Add assertions when you're ready. Move the file to tests/ — zero effort to promote an exploration into a permanent verification.\n\nLet AI generate the data-driven variants. You review and promote.\n\nExplore\n\nexplore/get.test.ts\n\nTest\n\ntests/get.test.ts\n\nAutomate\n\n↓\n\nFree forever\n\nglubean run --ci\n\nGitHub Actions, GitLab CI...\n\nComing soon\n\nGlubean Cloud\n\nScheduled runs, dashboards\n\nHow it compares\n\nA different approach to API tooling.\n\n\tGlubean\tGUI Collections\tHTTP File Senders\nRuntime\tVS Code extension\tStandalone app\tVS Code extension\nTest format\tReal TypeScript\tGUI / DSL\tPlain-text config\nBreakpoint debugging\tYes — VS Code debugger\tconsole.log()\tNo\nDiff two responses\tNative editor diff\tNo\tNo\nSchema validation\tZod / Valibot built-in\tVia plugins\tNo\nVersion control\tGit-native\tExport / import\tYes\nCI / CD\tSame file, zero migration\tSeparate runner + export\tManual scripting\nAI-generated tests\tTyped SDK, works first try\tNo\tNo\nSee the full comparison\nWorks with what you already have — or nothing at all\n\nHave Postman collections or an OpenAPI spec? Drop the file into a Glubean project and let AI convert it. Starting from scratch? Just tell AI which API to test — no import files needed. Either way, you get typed tests in minutes.\n\nNo files? No problem\n\nTell AI \"test the GitHub repos API\" and it writes a working Glubean test. Any public API, zero prerequisites.\n\nHave Postman / OpenAPI?\n\nDrop your export file in the project. AI reads the source and batch-converts endpoints into typed tests.\n\nLock the pattern, scale fast\n\nDecide auth model, assertion depth, and file structure once. AI applies it consistently across the rest.\n\nTest any API in 2 minutes\nMigration guide\nComing soon\nGlubean Cloud\n\nScheduled verification runs, persistent history with structured traces, team dashboards, and safe secrets management. Same test files — executed and governed in the cloud.\n\nJoin waitlist\n\nNo spam. We'll only email when Cloud launches.\n\nGlubean\nDocs\nGitHub\nVS Code\nJSR\nContact",
+          "expected": "Install the extension"
+        },
+        {
+          "type": "log",
+          "message": "Get-started section verified"
+        },
+        {
+          "type": "summary",
+          "data": {
+            "httpRequestTotal": 0,
+            "httpErrorTotal": 0,
+            "httpErrorRate": 0,
+            "assertionTotal": 2,
+            "assertionFailed": 0,
+            "warningTotal": 0,
+            "warningTriggered": 0,
+            "schemaValidationTotal": 0,
+            "schemaValidationFailed": 0,
+            "schemaValidationWarnings": 0,
+            "stepTotal": 0,
+            "stepPassed": 0,
+            "stepFailed": 0,
+            "stepSkipped": 0
+          }
+        },
+        {
+          "type": "status",
+          "status": "completed",
+          "id": "landing-get-started-section",
+          "peakMemoryBytes": 15765400,
+          "peakMemoryMB": "15.04"
+        }
+      ]
+    },
+    {
+      "testId": "landing-hero-content",
+      "testName": "Hero section has heading and CTA",
+      "tags": [
+        "landing",
+        "content"
+      ],
+      "success": true,
+      "durationMs": 4693,
+      "events": [
+        {
+          "type": "log",
+          "message": "Loading test module: file:///Users/peisong/glubean/browser/e2e/tests/landing.test.ts"
+        },
+        {
+          "type": "start",
+          "id": "landing-hero-content",
+          "name": "Hero section has heading and CTA",
+          "tags": [
+            "landing",
+            "content"
+          ]
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /",
+            "method": "GET",
+            "url": "https://www.glubean.com/",
+            "status": 200,
+            "duration": 931
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/1-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/1-1920.avif",
+            "status": 200,
+            "duration": 391
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 967
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 967
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 989
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 998
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1001
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1003
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1117
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/3-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/3-1920.avif",
+            "status": 200,
+            "duration": 354
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] Navigate https://glubean.com",
+            "method": "GET",
+            "url": "https://glubean.com",
+            "status": 200,
+            "duration": 4077
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/4-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/4-1920.avif",
+            "status": 200,
+            "duration": 415
+          }
+        },
+        {
+          "type": "metric",
+          "name": "page_load_ms",
+          "value": 4052,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "metric",
+          "name": "dom_content_loaded_ms",
+          "value": 3638,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/5-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/5-1920.avif",
+            "status": 200,
+            "duration": 423
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected {\"handle\":{}} to be defined",
+          "actual": {
+            "handle": {}
+          }
+        },
+        {
+          "type": "log",
+          "message": "Hero heading",
+          "data": {
+            "text": "API collections, asrealcode"
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected 27 to be greater than 0",
+          "actual": 27,
+          "expected": "> 0"
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected {\"handle\":{}} to be defined",
+          "actual": {
+            "handle": {}
+          }
+        },
+        {
+          "type": "log",
+          "message": "VS Code CTA link found"
+        },
+        {
+          "type": "summary",
+          "data": {
+            "httpRequestTotal": 0,
+            "httpErrorTotal": 0,
+            "httpErrorRate": 0,
+            "assertionTotal": 3,
+            "assertionFailed": 0,
+            "warningTotal": 0,
+            "warningTriggered": 0,
+            "schemaValidationTotal": 0,
+            "schemaValidationFailed": 0,
+            "schemaValidationWarnings": 0,
+            "stepTotal": 0,
+            "stepPassed": 0,
+            "stepFailed": 0,
+            "stepSkipped": 0
+          }
+        },
+        {
+          "type": "status",
+          "status": "completed",
+          "id": "landing-hero-content",
+          "peakMemoryBytes": 15792968,
+          "peakMemoryMB": "15.06"
+        }
+      ]
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "testName": "Homepage loads with 200 and correct title",
+      "tags": [
+        "landing",
+        "smoke"
+      ],
+      "success": true,
+      "durationMs": 5051,
+      "events": [
+        {
+          "type": "log",
+          "message": "Loading test module: file:///Users/peisong/glubean/browser/e2e/tests/landing.test.ts"
+        },
+        {
+          "type": "start",
+          "id": "landing-homepage-loads",
+          "name": "Homepage loads with 200 and correct title",
+          "tags": [
+            "landing",
+            "smoke"
+          ]
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /",
+            "method": "GET",
+            "url": "https://www.glubean.com/",
+            "status": 200,
+            "duration": 960
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/1-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/1-1920.avif",
+            "status": 200,
+            "duration": 514
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1086
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/4-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/4-1920.avif",
+            "status": 200,
+            "duration": 485
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/5-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/5-1920.avif",
+            "status": 200,
+            "duration": 524
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1404
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1405
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/3-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/3-1920.avif",
+            "status": 200,
+            "duration": 557
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1438
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/2-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/2-1920.avif",
+            "status": 200,
+            "duration": 661
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1543
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1639
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1641
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] Navigate https://glubean.com",
+            "method": "GET",
+            "url": "https://glubean.com",
+            "status": 200,
+            "duration": 4433
+          }
+        },
+        {
+          "type": "metric",
+          "name": "page_load_ms",
+          "value": 4409,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "metric",
+          "name": "dom_content_loaded_ms",
+          "value": 3641,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "log",
+          "message": "Page title",
+          "data": {
+            "title": "Glubean - Verification-as-code. Run tests across environments."
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected \"glubean - verification-as-code. run tests across environments.\" to contain \"glubean\"",
+          "actual": "glubean - verification-as-code. run tests across environments.",
+          "expected": "glubean"
+        },
+        {
+          "type": "summary",
+          "data": {
+            "httpRequestTotal": 0,
+            "httpErrorTotal": 0,
+            "httpErrorRate": 0,
+            "assertionTotal": 1,
+            "assertionFailed": 0,
+            "warningTotal": 0,
+            "warningTriggered": 0,
+            "schemaValidationTotal": 0,
+            "schemaValidationFailed": 0,
+            "schemaValidationWarnings": 0,
+            "stepTotal": 0,
+            "stepPassed": 0,
+            "stepFailed": 0,
+            "stepSkipped": 0
+          }
+        },
+        {
+          "type": "status",
+          "status": "completed",
+          "id": "landing-homepage-loads",
+          "peakMemoryBytes": 15746408,
+          "peakMemoryMB": "15.02"
+        }
+      ]
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "testName": "Page loads within 10 seconds",
+      "tags": [
+        "landing",
+        "performance"
+      ],
+      "success": true,
+      "durationMs": 5066,
+      "events": [
+        {
+          "type": "log",
+          "message": "Loading test module: file:///Users/peisong/glubean/browser/e2e/tests/landing.test.ts"
+        },
+        {
+          "type": "start",
+          "id": "landing-page-load-performance",
+          "name": "Page loads within 10 seconds",
+          "tags": [
+            "landing",
+            "performance"
+          ]
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /",
+            "method": "GET",
+            "url": "https://www.glubean.com/",
+            "status": 200,
+            "duration": 1052
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/1-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/1-1920.avif",
+            "status": 200,
+            "duration": 682
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1093
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1254
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/3-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/3-1920.avif",
+            "status": 200,
+            "duration": 356
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1311
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/4-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/4-1920.avif",
+            "status": 200,
+            "duration": 418
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/5-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/5-1920.avif",
+            "status": 200,
+            "duration": 418
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /screenshots/2-1920.avif",
+            "method": "GET",
+            "url": "https://www.glubean.com/screenshots/2-1920.avif",
+            "status": 200,
+            "duration": 443
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1433
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1450
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1463
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] GET /_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "method": "GET",
+            "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+            "status": 200,
+            "duration": 1503
+          }
+        },
+        {
+          "type": "trace",
+          "data": {
+            "name": "[browser] Navigate https://glubean.com",
+            "method": "GET",
+            "url": "https://glubean.com",
+            "status": 200,
+            "duration": 4458
+          }
+        },
+        {
+          "type": "metric",
+          "name": "page_load_ms",
+          "value": 4433,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "metric",
+          "name": "dom_content_loaded_ms",
+          "value": 3834,
+          "unit": "ms",
+          "tags": {
+            "url": "/"
+          }
+        },
+        {
+          "type": "log",
+          "message": "Page load time",
+          "data": {
+            "ms": 4492
+          }
+        },
+        {
+          "type": "metric",
+          "name": "e2e_page_load_ms",
+          "value": 4492,
+          "unit": "ms",
+          "tags": {
+            "page": "/"
+          }
+        },
+        {
+          "type": "assertion",
+          "passed": true,
+          "message": "expected 4492 to be less than 10000",
+          "actual": 4492,
+          "expected": "< 10000"
+        },
+        {
+          "type": "summary",
+          "data": {
+            "httpRequestTotal": 0,
+            "httpErrorTotal": 0,
+            "httpErrorRate": 0,
+            "assertionTotal": 1,
+            "assertionFailed": 0,
+            "warningTotal": 0,
+            "warningTriggered": 0,
+            "schemaValidationTotal": 0,
+            "schemaValidationFailed": 0,
+            "schemaValidationWarnings": 0,
+            "stepTotal": 0,
+            "stepPassed": 0,
+            "stepFailed": 0,
+            "stepSkipped": 0
+          }
+        },
+        {
+          "type": "status",
+          "status": "completed",
+          "id": "landing-page-load-performance",
+          "peakMemoryBytes": 15945544,
+          "peakMemoryMB": "15.21"
+        }
+      ]
+    }
+  ]
+}

@@ -108,10 +108,16 @@ export class GlubeanBrowser {
     return GlubeanPage._create(rawPage, this._baseUrl, ctx, this._options);
   }
 
-  /** Disconnect from the browser. Typically not needed — the browser outlives tests. */
+  /** Disconnect from the browser without closing it. Useful for remote Chrome. */
   async disconnect(): Promise<void> {
     const browser = await this._getBrowser();
     browser.disconnect();
+  }
+
+  /** Close the browser and terminate the Chrome process. */
+  async close(): Promise<void> {
+    const browser = await this._getBrowser();
+    await browser.close();
   }
 }
 

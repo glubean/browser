@@ -1,0 +1,339 @@
+{
+  "runAt": "2026-02-26T01:03:24.897Z",
+  "target": "./tests",
+  "files": [
+    "tests/landing.test.ts"
+  ],
+  "traces": [
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/1-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/5-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/4-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/3-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/2-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-get-started-section",
+      "method": "GET",
+      "url": "https://glubean.com",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://www.glubean.com/",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/1-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/3-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://glubean.com",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/4-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-hero-content",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/5-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/1-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/4-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/5-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/3-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/2-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-homepage-loads",
+      "method": "GET",
+      "url": "https://glubean.com",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/1-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/webpack-d607d865fd49d71c.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/b6890e83-0afb69eb8ea513a8.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/3-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/main-app-6f050b8877a0118d.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/4-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/5-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/screenshots/2-1920.avif",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/630-0aafb3cc19c2b1be.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/4-d6f9389cffc0b628.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/154-3723851ce94e3347.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://www.glubean.com/_next/static/chunks/app/page-22c25f93240ce1f0.js?dpl=dpl_6299MiwgNKY9wuvqVsBpSfnpY6ig",
+      "status": 200
+    },
+    {
+      "testId": "landing-page-load-performance",
+      "method": "GET",
+      "url": "https://glubean.com",
+      "status": 200
+    }
+  ]
+}

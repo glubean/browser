@@ -3,12 +3,22 @@
   "specifiers": {
     "jsr:@glubean/sdk@0.11": "0.11.1",
     "jsr:@std/assert@*": "1.0.19",
+    "jsr:@std/cli@1": "1.0.27",
     "jsr:@std/internal@^1.0.12": "1.0.12",
     "jsr:@std/path@1": "1.1.4",
     "jsr:@std/yaml@1": "1.0.12",
+    "npm:ky@^1.14.0": "1.14.3",
     "npm:puppeteer-core@24": "24.37.5_devtools-protocol@0.0.1566079"
   },
   "jsr": {
+    "@glubean/runner@0.11.4": {
+      "integrity": "f1e3f5bb0ac4a5137deaa34fdcbfe093dce8e00e108ab952a488bcf18f750bdf",
+      "dependencies": [
+        "jsr:@glubean/sdk",
+        "jsr:@std/cli",
+        "npm:ky"
+      ]
+    },
     "@glubean/sdk@0.11.1": {
       "integrity": "927d7fb3124d98b6485762d54ed6f11662b7becf101a25553da8fc1b4cce2ecf",
       "dependencies": [
@@ -21,6 +31,9 @@
       "dependencies": [
         "jsr:@std/internal"
       ]
+    },
+    "@std/cli@1.0.27": {
+      "integrity": "eba97edd0891871a7410e835dd94b3c260c709cca5983df2689c25a71fbe04de"
     },
     "@std/internal@1.0.12": {
       "integrity": "972a634fd5bc34b242024402972cd5143eac68d8dffaca5eaa4dba30ce17b027"
@@ -273,6 +286,9 @@
     "is-fullwidth-code-point@3.0.0": {
       "integrity": "sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg=="
     },
+    "ky@1.14.3": {
+      "integrity": "sha512-9zy9lkjac+TR1c2tG+mkNSVlyOpInnWdSMiue4F+kq8TwJSgv6o8jhLRg8Ho6SnZ9wOYUq/yozts9qQCfk7bIw=="
+    },
     "lru-cache@7.18.3": {
       "integrity": "sha512-jumlc0BIUrS3qJGgIkWZsyfAM7NCWiBcCDhnd+3NNM5KbBmLTgHVfWBcg6W+rLUsIpzpERPsvwUP7CckAQSOoA=="
     },
@@ -492,6 +508,13 @@
     "dependencies": [
       "jsr:@glubean/sdk@0.11",
       "npm:puppeteer-core@24"
-    ]
+    ],
+    "members": {
+      "e2e": {
+        "dependencies": [
+          "jsr:@glubean/sdk@0.11"
+        ]
+      }
+    }
   }
 }
