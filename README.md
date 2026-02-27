@@ -3,49 +3,111 @@
 Browser automation plugin for [Glubean](https://glubean.dev), powered by
 [puppeteer-core](https://pptr.dev).
 
-This plugin **wraps Puppeteer** and adds two layers of capabilities that
-Puppeteer alone doesn't provide:
+## What `@glubean/browser` adds on top of Puppeteer
 
-### Layer 1: Glubean Observability
+Puppeteer gives you a Chrome remote control. This plugin adds **two layers** on
+top:
 
-Every browser action is automatically wired into the Glubean test context:
+### Layer 1: Auto-observability — every action is traced, timed, and captured
 
-- **Navigation tracing** — every `page.goto()` emits a `ctx.trace()` event
-- **Network tracing** — all in-page XHR/fetch calls appear in the Glubean trace
-  timeline
-- **Performance metrics** — page load and DOMContentLoaded timing via
-  `ctx.metric()`
-- **Console forwarding** — browser `console.*` output and uncaught errors flow
-  to `ctx.log()`/`ctx.warn()`
-- **Auto-screenshots** — capture on failure or at every step
-  (`screenshot: "on-failure" | "every-step"`)
+You write zero instrumentation code. Everything flows into Glubean's trace
+timeline automatically.
 
-### Layer 2: DX Enhancements (things Puppeteer doesn't have)
+| What happens | Puppeteer | @glubean/browser |
+|---|---|---|
+| You navigate to `/login` | Nothing logged | Trace emitted with URL, status, duration |
+| Page fetches `/api/auth` via XHR | Nothing logged | Trace emitted via CDP — same timeline as your test |
+| Page takes 3.2s to load | Unknown | `page_load_ms` and `dom_content_loaded_ms` metrics emitted |
+| `console.error("oops")` fires in-page | Silent unless you listen | Forwarded to test log + event |
+| Test fails | You get a stack trace | You get a stack trace **+ automatic screenshot** |
 
-Puppeteer is a low-level Chrome DevTools Protocol library. It gives you raw
-power, but leaves convenience to you. This plugin adds the DX features that
-Puppeteer users often wish they had — and that Playwright users take for
-granted:
+### Layer 2: DX — the APIs Puppeteer doesn't have
 
-- **Action auto-waiting** — `click()` and `type()` automatically wait for the
-  element to be attached, visible, and enabled before interacting (Puppeteer
-  requires manual `waitForSelector`)
-- **Navigation auto-wait** — `waitForURL()`, `textContent()`, `getAttribute()`,
-  etc. (Puppeteer has no equivalent — you'd write `page.evaluate()` and manual
-  polling)
-- **Assertion auto-retry** — `expectText()`, `expectVisible()`, `expectCount()`,
-  etc. poll until a condition matches or timeout (Puppeteer has no assertion
-  layer at all)
-- **Diagnostic errors** — timeout errors include the selector, what check
-  failed, computed styles, and a `force: true` hint (Puppeteer just says
-  "timeout")
+**Auto-retrying assertions** (Puppeteer has none):
+```ts
+await page.expectText("h1", "Welcome");     // retries until match or 5s timeout
+await page.expectURL("/dashboard");          // retries until URL matches
+await page.expectVisible(".modal");          // retries until visible
+await page.expectCount(".item", 3);          // retries until count matches
+```
 
-All of these are **new APIs on `GlubeanPage`**, not Puppeteer native. You can
-always drop down to the raw Puppeteer `Page` via `page.raw` when you need full
-CDP-level control.
+**Navigation helpers** (Puppeteer requires `$eval` + manual polling):
+```ts
+const text = await page.textContent("h1");   // waits for element, returns textContent
+const val  = await page.inputValue("#email"); // waits for input, returns .value
+await page.waitForURL("/dashboard");          // polls URL until match
+```
 
-No bundled browser binary. No framework conflicts. Just Chrome automation that
-plugs into Glubean's test context.
+**One-liner patterns** (Puppeteer requires boilerplate):
+```ts
+await page.clickAndNavigate("a.link");       // Promise.all([waitForNavigation, click]) + metrics
+await page.type("#email", "user@test.com");  // Locator auto-wait + type (Locator has no type())
+await page.upload("#file", "./resume.pdf");  // wait for input + uploadFile()
+```
+
+**Full Puppeteer passthrough** — no `page.raw` needed:
+```ts
+await page.setViewport({ width: 1280, height: 720 });  // Puppeteer method, works directly
+await page.keyboard.press("Enter");                     // Puppeteer method, works directly
+```
+
+### Before / After
+
+**Puppeteer + Jest:**
+```ts
+const browser = await puppeteer.launch();
+const page = await browser.newPage();
+try {
+  await page.goto("http://localhost:3000/login");
+
+  await page.waitForSelector("#email");
+  await page.type("#email", "user@test.com");
+  await page.type("#password", "secret");
+
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: "load" }),
+    page.click('button[type="submit"]'),
+  ]);
+
+  // manual URL check — no retry
+  expect(page.url()).toContain("/dashboard");
+
+  // manual text check — no retry, no helper
+  const text = await page.$eval("h1", (el) => el.textContent);
+  expect(text).toBe("Welcome back");
+} catch (err) {
+  await page.screenshot({ path: "fail.png", fullPage: true });
+  throw err;
+} finally {
+  await browser.close();
+}
+// traces? metrics? network logs? console errors? — all DIY
+```
+
+**@glubean/browser:**
+```ts
+export const login = browserTest("login", async ({ page }) => {
+  await page.goto("/login");
+  await page.type("#email", "user@test.com");
+  await page.type("#password", "secret");
+  await page.clickAndNavigate('button[type="submit"]');
+  await page.expectURL("/dashboard");
+  await page.expectText("h1", "Welcome back");
+});
+// traces ✓  metrics ✓  network logs ✓  console errors ✓  screenshots ✓
+```
+
+### The difference at a glance
+
+| | Puppeteer + Jest | @glubean/browser |
+|---|---|---|
+| **Observability** | DIY — you write every trace, metric, screenshot | Automatic — zero-config tracing, metrics, screenshots |
+| **Assertions** | `expect()` runs once, no retry | `expectText()` / `expectURL()` auto-retry until stable |
+| **Navigation helpers** | `$eval()` + manual polling | `textContent()`, `waitForURL()`, `clickAndNavigate()` |
+| **Action tracing** | Manual `console.log` | Every click/type/goto emits structured action with duration |
+| **Network visibility** | None unless you add listeners | All XHR/fetch traced via CDP automatically |
+| **Failure debugging** | Stack trace only | Stack trace + screenshot + last action trace |
+| **Ecosystem** | Standalone | Plugs into Glubean — same timeline as API tests |
 
 ## Install
 
@@ -151,115 +213,6 @@ export const loginFlow = browserTest("login-flow", async (ctx) => {
 });
 ```
 
-## Auto-Waiting: Before & After
-
-Puppeteer is intentionally low-level — it doesn't auto-wait for elements,
-doesn't retry assertions, and doesn't have convenience methods for reading DOM
-properties. This plugin adds all of that, inspired by Playwright's API design
-but implemented on top of Puppeteer's CDP foundation.
-
-### Before (raw Puppeteer — what you'd write without this plugin)
-
-```ts
-// Puppeteer doesn't auto-wait. You must call waitForSelector yourself.
-await page.waitForSelector("#submit");
-await page.click("#submit");
-
-// Puppeteer has no textContent() method. You use evaluate().
-const text = await page.evaluate(
-  () => document.querySelector("h1")?.textContent ?? "",
-);
-if (text !== "Welcome") throw new Error(`Expected "Welcome", got "${text}"`);
-
-// Puppeteer has no URL polling. You check once and hope.
-if (!page.url().includes("/dashboard")) {
-  throw new Error("Not on dashboard");
-}
-
-// Puppeteer has no assertion retry. You write your own polling loop.
-let items;
-const start = Date.now();
-while (Date.now() - start < 5000) {
-  items = await page.$$(".item");
-  if (items.length === 3) break;
-  await new Promise((r) => setTimeout(r, 100));
-}
-if (items.length !== 3) {
-  throw new Error(`Expected 3 items, got ${items.length}`);
-}
-```
-
-### After (with @glubean/browser — all methods below are new, not Puppeteer native)
-
-```ts
-// click() is enhanced: auto-waits for attached + visible + enabled
-await page.click("#submit");
-
-// expectText() is new: retries until text matches (5s default timeout)
-await page.expectText("h1", "Welcome");
-
-// expectURL() is new: retries until URL matches
-await page.expectURL("/dashboard");
-
-// expectCount() is new: retries until element count matches
-await page.expectCount(".item", 3);
-```
-
-### What about `waitForNavigation`?
-
-Puppeteer's `page.waitForNavigation({ waitUntil: "load" })` waits for the
-browser's `load` event — meaning all resources (scripts, images, stylesheets)
-have finished loading. This is a fundamentally different guarantee.
-
-Our `waitForURL(pattern)` only polls the URL until it matches. It does **not**
-guarantee the page has finished loading. For SPA client-side routing (where the
-URL changes via `history.pushState` without a full page load), `waitForURL` is
-the right tool. For full-page navigations where you need the page to be fully
-loaded, use `page.raw.waitForNavigation()`:
-
-```ts
-// SPA route change — no full page load, just URL change
-await page.click("a.spa-link");
-await page.waitForURL("/dashboard"); // polls URL, fast
-await page.expectText("h1", "Dashboard"); // then verify content arrived
-
-// Full page navigation — need resources loaded
-await Promise.all([
-  page.raw.waitForNavigation({ waitUntil: "load" }),
-  page.raw.click("a.external-link"),
-]);
-```
-
-The `page.raw` escape hatch is always available for Puppeteer-native behavior.
-
-**What's enhanced vs what's new:**
-
-| Method                 | Puppeteer has it?     | What we changed                                                                                             |
-| ---------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `click(selector)`      | Yes, but no auto-wait | Added actionability checks (attached + visible + enabled) before clicking                                   |
-| `type(selector, text)` | Yes, but no auto-wait | Same — waits for element to be actionable                                                                   |
-| `waitForURL()`         | **No**                | New. Polls URL until match. Different from Puppeteer's `waitForNavigation` which waits for the `load` event |
-| `textContent()`        | **No**                | New. Puppeteer requires `$eval(sel, el => el.textContent)`                                                  |
-| `innerText()`          | **No**                | New. Same pattern                                                                                           |
-| `getAttribute()`       | **No**                | New. Puppeteer requires `$eval`                                                                             |
-| `inputValue()`         | **No**                | New. Puppeteer requires `$eval`                                                                             |
-| `isVisible()`          | **No**                | New. Puppeteer requires `evaluate` + `getComputedStyle`                                                     |
-| `isEnabled()`          | **No**                | New. Puppeteer requires `evaluate`                                                                          |
-| `expectURL()`          | **No**                | New. Auto-retrying assertion                                                                                |
-| `expectText()`         | **No**                | New. Auto-retrying assertion                                                                                |
-| `expectVisible()`      | **No**                | New. Auto-retrying assertion                                                                                |
-| `expectHidden()`       | **No**                | New. Auto-retrying assertion                                                                                |
-| `expectAttribute()`    | **No**                | New. Auto-retrying assertion                                                                                |
-| `expectCount()`        | **No**                | New. Auto-retrying assertion                                                                                |
-
-Need raw Puppeteer? It's always there via `page.raw`:
-
-```ts
-// Full CDP-level access when you need it
-await page.raw.waitForNavigation({ waitUntil: "networkidle0" });
-await page.raw.evaluate(() => window.scrollTo(0, 999));
-```
-
 ## What Gets Auto-Traced
 
 When you run a test, Glubean's `.glubean/traces/` will contain:
@@ -309,19 +262,25 @@ Returned by the plugin. Manages the Chrome connection.
 | `newPage(ctx)` | Create an instrumented page wired to the test context |
 | `disconnect()` | Disconnect from Chrome (rarely needed)                |
 
-### `GlubeanPage`
+### `GlubeanPage` (returned as `InstrumentedPage`)
 
-Instrumented page wrapper. Methods marked with **+** are enhanced versions of
-Puppeteer originals; methods marked with **NEW** have no Puppeteer equivalent.
+Instrumented page wrapper. All Puppeteer `Page` methods/properties are available
+directly via Proxy passthrough — enhanced methods take priority, everything else
+falls through to the underlying Puppeteer Page.
+
+Methods marked with **+** are enhanced versions of Puppeteer originals; methods
+marked with **NEW** have no Puppeteer equivalent.
 
 **Core (Puppeteer-compatible, enhanced with observability)**
 
 |       | Method                           | Description                                       |
 | ----- | -------------------------------- | ------------------------------------------------- |
-| **+** | `goto(url, options?)`            | Navigate — enhanced with auto-trace and metrics   |
-| **+** | `click(selector, options?)`      | Click — enhanced with actionability auto-wait     |
-| **+** | `type(selector, text, options?)` | Type — enhanced with actionability auto-wait      |
-|       | `$(selector)`                    | Query single element (passthrough)                |
+| **+** | `goto(url, options?)`            | Navigate — enhanced with auto-trace and metrics                   |
+| **+** | `click(selector, options?)`      | Click — enhanced with actionability auto-wait                     |
+| **+** | `clickAndNavigate(selector, options?)` | Click + waitForNavigation in one call (trace + metrics)    |
+| **+** | `type(selector, text, options?)` | Type — enhanced with actionability auto-wait                      |
+| **+** | `locator(selector)`              | Returns a WrappedLocator with chain methods and auto-tracing      |
+|       | `$(selector)`                    | Query single element (passthrough)                                |
 |       | `$$(selector)`                   | Query all elements (passthrough)                  |
 |       | `evaluate(fn, ...args)`          | Run function in page context (passthrough)        |
 |       | `screenshot(options?)`           | Take screenshot (passthrough)                     |

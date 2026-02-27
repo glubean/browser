@@ -21,12 +21,20 @@ import type {
 } from "puppeteer-core";
 import { attachNetworkTracer } from "./network.ts";
 import { collectNavigationMetrics } from "./metrics.ts";
-import {
-  ActionabilityError,
-  type ActionOptions,
-  asActionablePage,
-  waitForActionable,
-} from "./actionability.ts";
+import { createWrappedLocator, type WrappedLocator } from "./locator.ts";
+
+/**
+ * A GlubeanPage that also exposes every Puppeteer `Page` method/property
+ * via Proxy fallthrough. GlubeanPage's own methods take priority; anything
+ * else is forwarded to the underlying `raw` Page.
+ */
+export type InstrumentedPage = GlubeanPage & Page;
+
+/** Per-action options for interaction methods. */
+export interface ActionOptions {
+  /** Timeout in ms (overrides the global `actionTimeout`). */
+  timeout?: number;
+}
 
 /**
  * Structural type for a puppeteer-compatible module.
@@ -108,7 +116,7 @@ interface BrowserOptionsBase {
   screenshot?: ScreenshotMode;
   /** Directory for auto-screenshots. Default: `".glubean/screenshots"`. */
   screenshotDir?: string;
-  /** Default timeout (ms) for actionability checks on `click()`/`type()`. Default: 30 000. */
+  /** Default timeout (ms) for Locator auto-waiting on `click()`/`type()` etc. Default: 30 000. */
   actionTimeout?: number;
 }
 
@@ -204,7 +212,7 @@ export class GlubeanBrowser {
    * Each call creates a fresh browser page. Remember to call `page.close()`
    * in your teardown (or use `test.extend()` with a lifecycle factory).
    */
-  async newPage(ctx: BrowserTestContext): Promise<GlubeanPage> {
+  async newPage(ctx: BrowserTestContext): Promise<InstrumentedPage> {
     const browser = await this._getBrowser();
     const rawPage = await browser.newPage();
     // Read testId lazily from the runtime global — the harness updates it
@@ -289,7 +297,7 @@ export class GlubeanPage {
     ctx: BrowserTestContext,
     options: BrowserOptions,
     runtimeTestId?: string,
-  ): Promise<GlubeanPage> {
+  ): Promise<InstrumentedPage> {
     const consoleForward = options.consoleForward ?? true;
     const networkTrace = options.networkTrace ?? true;
     const metricsEnabled = options.metrics ?? true;
@@ -341,7 +349,24 @@ export class GlubeanPage {
       });
     }
 
-    return gp;
+    // Proxy: GlubeanPage methods take priority; everything else falls through
+    // to the raw Puppeteer Page so users can call page.waitForNavigation(),
+    // page.setViewport(), page.keyboard.press(), etc. directly.
+    return new Proxy(gp, {
+      get(target, prop, receiver) {
+        if (prop in target) {
+          const value = Reflect.get(target, prop, receiver);
+          if (typeof value === "function") return value.bind(target);
+          return value;
+        }
+        const rawValue = Reflect.get(target.raw, prop);
+        if (typeof rawValue === "function") return rawValue.bind(target.raw);
+        return rawValue;
+      },
+      has(target, prop) {
+        return prop in target || prop in target.raw;
+      },
+    }) as unknown as InstrumentedPage;
   }
 
   // ── Screenshot helpers ──────────────────────────────────────────────
@@ -438,31 +463,6 @@ export class GlubeanPage {
     }
   }
 
-  // ── Auto-wait diagnostics ─────────────────────────────────────────
-
-  private static readonly _AUTOWAIT_METRIC_THRESHOLD = 500;
-  private static readonly _AUTOWAIT_WARN_THRESHOLD = 5_000;
-
-  private _emitAutoWaitDiagnostics(
-    action: string,
-    selector: string,
-    autoWaitMs: number,
-  ): void {
-    if (autoWaitMs > GlubeanPage._AUTOWAIT_WARN_THRESHOLD) {
-      this._ctx.warn(
-        false,
-        `[browser] Auto-wait for ${action}("${selector}") took ${autoWaitMs}ms — ` +
-          `consider checking why the element is slow to become actionable`,
-      );
-    }
-    if (autoWaitMs > GlubeanPage._AUTOWAIT_METRIC_THRESHOLD) {
-      this._ctx.metric("browser_actionability_wait_ms", autoWaitMs, {
-        unit: "ms",
-        tags: { selector, action },
-      });
-    }
-  }
-
   // ── Navigation & interaction ────────────────────────────────────────
 
   /**
@@ -525,186 +525,155 @@ export class GlubeanPage {
   }
 
   /**
-   * Click an element matching the selector.
+   * Create a WrappedLocator for the given selector.
    *
-   * Auto-waits for the element to be attached, visible, and enabled before
-   * clicking. Use `{ force: true }` to skip actionability checks.
+   * The returned locator supports Puppeteer's chain methods (setTimeout,
+   * setVisibility, etc.) and auto-injects trace events and screenshots
+   * for action methods (click, fill, hover, scroll, type).
+   *
+   * @example
+   * ```ts
+   * // Chain Locator options before acting
+   * await page.locator("#submit").setTimeout(5000).click();
+   *
+   * // type() extension — Locator has no native type()
+   * await page.locator("#email").type("user@test.com");
+   * ```
    */
-  async click(selector: string, options?: ActionOptions): Promise<void> {
-    const start = Date.now();
-    try {
-      await waitForActionable(asActionablePage(this.raw), selector, {
-        timeout: options?.timeout ?? this._actionTimeout,
-        force: options?.force,
-      });
-      const autoWaitMs = Date.now() - start;
-      await this.raw.click(selector);
-      const duration = Date.now() - start;
-
-      this._ctx.action({
-        category: "browser:click",
-        target: selector,
-        duration,
-        status: "ok",
-        detail: { autoWaitMs, force: options?.force ?? false },
-      });
-      this._emitAutoWaitDiagnostics("click", selector, autoWaitMs);
-    } catch (err) {
-      const duration = Date.now() - start;
-      this._ctx.action({
-        category: "browser:click",
-        target: selector,
-        duration,
-        status: err instanceof ActionabilityError ? "timeout" : "error",
-        detail: { error: String(err), force: options?.force ?? false },
-      });
-      await this._captureFailure(`click-${selector}`);
-      throw err;
-    }
-    await this._captureStep(`click-${selector}`);
+  locator(selector: string): WrappedLocator {
+    const inner = this.raw.locator(selector);
+    return createWrappedLocator(inner, {
+      action: (e) => this._ctx.action(e),
+      captureStep: (label) => this._captureStep(label),
+      captureFailure: (label) => this._captureFailure(label),
+    }, selector);
   }
 
   /**
-   * Type text into an element matching the selector.
+   * Click an element matching the selector.
    *
-   * Auto-waits for the element to be attached, visible, and enabled before
-   * typing. Use `{ force: true }` to skip actionability checks.
+   * Delegates to Puppeteer's Locator API for auto-waiting (attached, visible,
+   * enabled, stable bounding box). Emits a `browser:click` action for tracing.
+   */
+  async click(selector: string, options?: ActionOptions): Promise<void> {
+    await this.locator(selector)
+      .setTimeout(options?.timeout ?? this._actionTimeout)
+      .click();
+  }
+
+  /**
+   * Click an element and wait for a full-page navigation to complete.
+   *
+   * Convenience wrapper for `Promise.all([waitForNavigation, click])`.
+   * Emits a `browser:click-and-navigate` action with trace + metrics + screenshot.
+   *
+   * @example
+   * ```ts
+   * await page.clickAndNavigate("a.external-link");
+   * await page.clickAndNavigate("a.external-link", { waitUntil: "networkidle0" });
+   * ```
+   */
+  async clickAndNavigate(
+    selector: string,
+    options?: {
+      waitUntil?:
+        | "load"
+        | "domcontentloaded"
+        | "networkidle0"
+        | "networkidle2";
+      timeout?: number;
+    },
+  ): Promise<void> {
+    const start = Date.now();
+    const timeout = options?.timeout ?? this._actionTimeout;
+    try {
+      await Promise.all([
+        this.raw.waitForNavigation({
+          waitUntil: options?.waitUntil ?? "load",
+          timeout,
+        }),
+        this.locator(selector).setTimeout(timeout).click(),
+      ]);
+
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:click-and-navigate",
+        target: selector,
+        duration,
+        status: "ok",
+        detail: { url: this.raw.url() },
+      });
+
+      if (this._metricsEnabled) {
+        await collectNavigationMetrics(
+          this.raw,
+          (name, value, opts) => this._ctx.metric(name, value, opts),
+          this.raw.url(),
+        );
+      }
+    } catch (err) {
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:click-and-navigate",
+        target: selector,
+        duration,
+        status: "error",
+        detail: { error: String(err) },
+      });
+      await this._captureFailure(`clickAndNavigate-${selector}`);
+      throw err;
+    }
+    await this._captureStep(`clickAndNavigate-${selector}`);
+  }
+
+  /**
+   * Type text into an element matching the selector (appends — does not clear).
+   *
+   * Waits for the element to be actionable via Locator, then types using
+   * the ElementHandle. Use `fill()` to clear existing text before typing.
    */
   async type(
     selector: string,
     text: string,
     options?: ActionOptions,
   ): Promise<void> {
-    const start = Date.now();
-    try {
-      await waitForActionable(asActionablePage(this.raw), selector, {
-        timeout: options?.timeout ?? this._actionTimeout,
-        force: options?.force,
-      });
-      const autoWaitMs = Date.now() - start;
-      await this.raw.type(selector, text);
-      const duration = Date.now() - start;
-
-      this._ctx.action({
-        category: "browser:type",
-        target: selector,
-        duration,
-        status: "ok",
-        detail: {
-          textLength: text.length,
-          autoWaitMs,
-          force: options?.force ?? false,
-        },
-      });
-      this._emitAutoWaitDiagnostics("type", selector, autoWaitMs);
-    } catch (err) {
-      const duration = Date.now() - start;
-      this._ctx.action({
-        category: "browser:type",
-        target: selector,
-        duration,
-        status: err instanceof ActionabilityError ? "timeout" : "error",
-        detail: { textLength: text.length, error: String(err) },
-      });
-      await this._captureFailure(`type-${selector}`);
-      throw err;
-    }
-    await this._captureStep(`type-${selector}`);
+    await (this.locator(selector)
+      .setTimeout(options?.timeout ?? this._actionTimeout) as WrappedLocator)
+      .type(text);
   }
 
   /**
    * Clear an input and type a new value.
    *
-   * Unlike `type()` which appends, `fill()` first selects all existing text
-   * (triple-click) then types the replacement. Auto-waits for actionability.
+   * Unlike `type()` which appends, `fill()` clears existing text first.
+   * Delegates to Puppeteer's Locator `fill()` for auto-waiting.
    */
   async fill(
     selector: string,
     value: string,
     options?: ActionOptions,
   ): Promise<void> {
-    const start = Date.now();
-    try {
-      await waitForActionable(asActionablePage(this.raw), selector, {
-        timeout: options?.timeout ?? this._actionTimeout,
-        force: options?.force,
-      });
-      const autoWaitMs = Date.now() - start;
-      await this.raw.click(selector, { count: 3 });
-      await this.raw.keyboard.press("Backspace");
-      await this.raw.type(selector, value);
-      const duration = Date.now() - start;
-
-      this._ctx.action({
-        category: "browser:fill",
-        target: selector,
-        duration,
-        status: "ok",
-        detail: {
-          valueLength: value.length,
-          autoWaitMs,
-          force: options?.force ?? false,
-        },
-      });
-      this._emitAutoWaitDiagnostics("fill", selector, autoWaitMs);
-    } catch (err) {
-      const duration = Date.now() - start;
-      this._ctx.action({
-        category: "browser:fill",
-        target: selector,
-        duration,
-        status: err instanceof ActionabilityError ? "timeout" : "error",
-        detail: { valueLength: value.length, error: String(err) },
-      });
-      await this._captureFailure(`fill-${selector}`);
-      throw err;
-    }
-    await this._captureStep(`fill-${selector}`);
+    await this.locator(selector)
+      .setTimeout(options?.timeout ?? this._actionTimeout)
+      .fill(value);
   }
 
   /**
    * Hover over an element matching the selector.
    *
-   * Auto-waits for the element to be attached, visible, and enabled.
+   * Delegates to Puppeteer's Locator `hover()` for auto-waiting.
    */
   async hover(selector: string, options?: ActionOptions): Promise<void> {
-    const start = Date.now();
-    try {
-      await waitForActionable(asActionablePage(this.raw), selector, {
-        timeout: options?.timeout ?? this._actionTimeout,
-        force: options?.force,
-      });
-      const autoWaitMs = Date.now() - start;
-      await this.raw.hover(selector);
-      const duration = Date.now() - start;
-
-      this._ctx.action({
-        category: "browser:hover",
-        target: selector,
-        duration,
-        status: "ok",
-        detail: { autoWaitMs, force: options?.force ?? false },
-      });
-      this._emitAutoWaitDiagnostics("hover", selector, autoWaitMs);
-    } catch (err) {
-      const duration = Date.now() - start;
-      this._ctx.action({
-        category: "browser:hover",
-        target: selector,
-        duration,
-        status: err instanceof ActionabilityError ? "timeout" : "error",
-        detail: { error: String(err) },
-      });
-      await this._captureFailure(`hover-${selector}`);
-      throw err;
-    }
-    await this._captureStep(`hover-${selector}`);
+    await this.locator(selector)
+      .setTimeout(options?.timeout ?? this._actionTimeout)
+      .hover();
   }
 
   /**
    * Select option(s) from a `<select>` element by value.
    *
-   * Auto-waits for actionability. Returns the array of selected values.
+   * Waits for the element to be actionable via Locator, then selects values.
+   * Returns the array of selected values.
    */
   async select(
     selector: string,
@@ -712,21 +681,18 @@ export class GlubeanPage {
   ): Promise<string[]> {
     const start = Date.now();
     try {
-      await waitForActionable(asActionablePage(this.raw), selector, {
-        timeout: this._actionTimeout,
-      });
-      const autoWaitMs = Date.now() - start;
+      await this.locator(selector)
+        .setTimeout(this._actionTimeout)
+        .waitHandle();
       const selected = await this.raw.select(selector, ...values);
       const duration = Date.now() - start;
-
       this._ctx.action({
         category: "browser:select",
         target: selector,
         duration,
         status: "ok",
-        detail: { values, selected, autoWaitMs },
+        detail: { values, selected },
       });
-      this._emitAutoWaitDiagnostics("select", selector, autoWaitMs);
       return selected;
     } catch (err) {
       const duration = Date.now() - start;
@@ -734,7 +700,7 @@ export class GlubeanPage {
         category: "browser:select",
         target: selector,
         duration,
-        status: err instanceof ActionabilityError ? "timeout" : "error",
+        status: "timeout",
         detail: { values, error: String(err) },
       });
       await this._captureFailure(`select-${selector}`);
@@ -778,8 +744,8 @@ export class GlubeanPage {
   /**
    * Upload files to a file input element.
    *
-   * Auto-waits for the `<input type="file">` to be actionable, then
-   * attaches the specified files via `ElementHandle.uploadFile()`.
+   * Waits for the element to be actionable via Locator, then attaches files
+   * via `ElementHandle.uploadFile()`.
    */
   async upload(
     selector: string,
@@ -787,32 +753,27 @@ export class GlubeanPage {
   ): Promise<void> {
     const start = Date.now();
     try {
-      await waitForActionable(asActionablePage(this.raw), selector, {
-        timeout: this._actionTimeout,
-      });
-      const autoWaitMs = Date.now() - start;
-      const handle = await this.raw.$(selector);
-      if (!handle) throw new Error(`upload: element "${selector}" not found`);
+      const handle = await this.locator(selector)
+        .setTimeout(this._actionTimeout)
+        .waitHandle();
       // deno-lint-ignore no-explicit-any
       await (handle as any).uploadFile(...filePaths);
       await handle.dispose();
       const duration = Date.now() - start;
-
       this._ctx.action({
         category: "browser:upload",
         target: selector,
         duration,
         status: "ok",
-        detail: { fileCount: filePaths.length, autoWaitMs },
+        detail: { fileCount: filePaths.length },
       });
-      this._emitAutoWaitDiagnostics("upload", selector, autoWaitMs);
     } catch (err) {
       const duration = Date.now() - start;
       this._ctx.action({
         category: "browser:upload",
         target: selector,
         duration,
-        status: err instanceof ActionabilityError ? "timeout" : "error",
+        status: "timeout",
         detail: { fileCount: filePaths.length, error: String(err) },
       });
       await this._captureFailure(`upload-${selector}`);

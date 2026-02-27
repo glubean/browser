@@ -40,18 +40,14 @@
 export { browser } from "./src/plugin.ts";
 export { GlubeanBrowser, GlubeanPage } from "./src/page.ts";
 export type {
+  ActionOptions,
   BrowserAction,
   BrowserEvent,
   BrowserOptions,
   BrowserTestContext,
+  InstrumentedPage,
   PuppeteerLike,
   ResponseChecks,
   ScreenshotMode,
 } from "./src/page.ts";
-export { ActionabilityError } from "./src/actionability.ts";
-export type {
-  ActionabilityOptions,
-  ActionCheck,
-  ActionDiagnostics,
-  ActionOptions,
-} from "./src/actionability.ts";
+export type { WrappedLocator } from "./src/locator.ts";

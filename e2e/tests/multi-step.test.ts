@@ -14,11 +14,11 @@ export const exampleDotComFlow = screenshotTest(
     ctx.log("Example.com loaded", { title });
     ctx.expect(title).toContain("Example Domain");
 
-    // Step 2: Verify heading using Phase 4 textContent (auto-waits for element)
+    // Step 2: expectText — retries until text matches
     await ctx.page.expectText("h1", "Example Domain");
     ctx.log("Heading verified via expectText");
 
-    // Step 3: Click the link (auto-waits for actionability) and wait for navigation
+    // Step 3: click() delegates to Locator for auto-wait, waitForURL polls URL
     await ctx.page.click("a");
     await ctx.page.waitForURL("iana.org");
     ctx.log("Navigated to IANA via waitForURL");
