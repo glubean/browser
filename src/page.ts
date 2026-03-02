@@ -742,10 +742,11 @@ export class GlubeanPage {
   }
 
   /**
-   * Upload files to a file input element.
+   * Upload files to a `<input type="file">` element.
    *
    * Waits for the element to be actionable via Locator, then attaches files
-   * via `ElementHandle.uploadFile()`.
+   * via `ElementHandle.uploadFile()` and dispatches a `change` event so
+   * frameworks like React/Vue pick up the file selection.
    */
   async upload(
     selector: string,
@@ -758,6 +759,12 @@ export class GlubeanPage {
         .waitHandle();
       // deno-lint-ignore no-explicit-any
       await (handle as any).uploadFile(...filePaths);
+      // Puppeteer's uploadFile sets files via CDP but does NOT fire the
+      // native change event. React/Vue rely on it to update state.
+      // deno-lint-ignore no-explicit-any
+      await handle.evaluate((el: any) =>
+        el.dispatchEvent(new Event("change", { bubbles: true })),
+      );
       await handle.dispose();
       const duration = Date.now() - start;
       this._ctx.action({
@@ -780,6 +787,52 @@ export class GlubeanPage {
       throw err;
     }
     await this._captureStep(`upload-${selector}`);
+  }
+
+  /**
+   * Click a button/element that triggers a file chooser dialog, then accept
+   * the given files. Use this when the file input is hidden and opened via
+   * a custom button — the common pattern in modern SPAs.
+   *
+   * For a visible `<input type="file">`, prefer `upload()` instead.
+   *
+   * @example
+   * ```ts
+   * await page.chooseFile("#import-csv-btn", "./fixtures/users.csv");
+   * ```
+   */
+  async chooseFile(
+    triggerSelector: string,
+    ...filePaths: string[]
+  ): Promise<void> {
+    const start = Date.now();
+    try {
+      const [fileChooser] = await Promise.all([
+        this.raw.waitForFileChooser({ timeout: this._actionTimeout }),
+        this.click(triggerSelector),
+      ]);
+      await fileChooser.accept(filePaths);
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:chooseFile",
+        target: triggerSelector,
+        duration,
+        status: "ok",
+        detail: { fileCount: filePaths.length },
+      });
+    } catch (err) {
+      const duration = Date.now() - start;
+      this._ctx.action({
+        category: "browser:chooseFile",
+        target: triggerSelector,
+        duration,
+        status: "timeout",
+        detail: { fileCount: filePaths.length, error: String(err) },
+      });
+      await this._captureFailure(`chooseFile-${triggerSelector}`);
+      throw err;
+    }
+    await this._captureStep(`chooseFile-${triggerSelector}`);
   }
 
   /** Query a single element by selector. */

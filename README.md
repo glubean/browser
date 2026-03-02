@@ -21,9 +21,14 @@ timeline automatically.
 | `console.error("oops")` fires in-page | Silent unless you listen | Forwarded to test log + event |
 | Test fails | You get a stack trace | You get a stack trace **+ automatic screenshot** |
 
-### Layer 2: DX — the APIs Puppeteer doesn't have
+### Layer 2: DX — the APIs Puppeteer still doesn't have
 
-**Auto-retrying assertions** (Puppeteer has none):
+Puppeteer v21+ introduced the Locator API with auto-waiting for `click()`,
+`fill()`, `hover()`, and `scroll()`. This plugin uses Locators internally — so
+you get auto-waiting for free. But Puppeteer still has no assertion layer, no
+navigation helpers, and no `type()` on Locators.
+
+**Auto-retrying assertions** (Puppeteer has none — even with Locators):
 ```ts
 await page.expectText("h1", "Welcome");     // retries until match or 5s timeout
 await page.expectURL("/dashboard");          // retries until URL matches
@@ -31,17 +36,17 @@ await page.expectVisible(".modal");          // retries until visible
 await page.expectCount(".item", 3);          // retries until count matches
 ```
 
-**Navigation helpers** (Puppeteer requires `$eval` + manual polling):
+**Navigation helpers** (Puppeteer still requires `$eval` + manual polling):
 ```ts
 const text = await page.textContent("h1");   // waits for element, returns textContent
 const val  = await page.inputValue("#email"); // waits for input, returns .value
 await page.waitForURL("/dashboard");          // polls URL until match
 ```
 
-**One-liner patterns** (Puppeteer requires boilerplate):
+**One-liner patterns**:
 ```ts
 await page.clickAndNavigate("a.link");       // Promise.all([waitForNavigation, click]) + metrics
-await page.type("#email", "user@test.com");  // Locator auto-wait + type (Locator has no type())
+await page.type("#email", "user@test.com");  // auto-wait + type (Locator has fill(), not type())
 await page.upload("#file", "./resume.pdf");  // wait for input + uploadFile()
 ```
 
@@ -53,20 +58,20 @@ await page.keyboard.press("Enter");                     // Puppeteer method, wor
 
 ### Before / After
 
-**Puppeteer + Jest:**
+**Modern Puppeteer (v21+ Locator API) + Jest:**
 ```ts
 const browser = await puppeteer.launch();
 const page = await browser.newPage();
 try {
   await page.goto("http://localhost:3000/login");
 
-  await page.waitForSelector("#email");
-  await page.type("#email", "user@test.com");
-  await page.type("#password", "secret");
+  // v21+ Locator API — auto-waits for element
+  await page.locator("#email").fill("user@test.com");
+  await page.locator("#password").fill("secret");
 
   await Promise.all([
     page.waitForNavigation({ waitUntil: "load" }),
-    page.click('button[type="submit"]'),
+    page.locator('button[type="submit"]').click(),
   ]);
 
   // manual URL check — no retry
@@ -95,18 +100,24 @@ export const login = browserTest("login", async ({ page }) => {
   await page.expectText("h1", "Welcome back");
 });
 // traces ✓  metrics ✓  network logs ✓  console errors ✓  screenshots ✓
+// page.raw is the native Puppeteer Page — zero capability loss
 ```
+
+Even with the Locator API, Puppeteer still requires manual lifecycle
+management (`launch`/`close`), `Promise.all` for navigation, one-shot
+assertions, manual screenshots, and zero observability.
 
 ### The difference at a glance
 
-| | Puppeteer + Jest | @glubean/browser |
+| | Puppeteer (v21+ Locators) | @glubean/browser |
 |---|---|---|
-| **Observability** | DIY — you write every trace, metric, screenshot | Automatic — zero-config tracing, metrics, screenshots |
+| **Auto-wait** | Locator `click()` / `fill()` — yes | Same (uses Locators internally) |
 | **Assertions** | `expect()` runs once, no retry | `expectText()` / `expectURL()` auto-retry until stable |
+| **Observability** | DIY — you write every trace, metric, screenshot | Automatic — zero-config tracing, metrics, screenshots |
 | **Navigation helpers** | `$eval()` + manual polling | `textContent()`, `waitForURL()`, `clickAndNavigate()` |
-| **Action tracing** | Manual `console.log` | Every click/type/goto emits structured action with duration |
-| **Network visibility** | None unless you add listeners | All XHR/fetch traced via CDP automatically |
+| **Network visibility** | None unless you add CDP listeners | All XHR/fetch traced via CDP automatically |
 | **Failure debugging** | Stack trace only | Stack trace + screenshot + last action trace |
+| **Lifecycle** | Manual `launch()` / `close()` / try-finally | Managed by `browserTest()` fixture |
 | **Ecosystem** | Standalone | Plugs into Glubean — same timeline as API tests |
 
 ## Install
@@ -145,6 +156,28 @@ That's it. The plugin auto-detects Chrome on your machine:
 - **Linux**: `/usr/bin/google-chrome`, `/usr/bin/chromium`
 - **Docker**: `/usr/bin/chromium` (pre-installed in image)
 - **Override**: set `CHROME_PATH` env var for a custom path
+
+### With puppeteer-extra plugins
+
+Pass a puppeteer-extra instance to use community plugins (Stealth, Recaptcha,
+Adblocker, etc.) — all auto-tracing and assertions still work.
+
+```ts
+import { configure } from "@glubean/sdk";
+import { browser } from "@glubean/browser";
+import puppeteerExtra from "puppeteer-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import RecaptchaPlugin from "puppeteer-extra-plugin-recaptcha";
+
+puppeteerExtra.use(StealthPlugin());
+puppeteerExtra.use(RecaptchaPlugin({ provider: { id: "2captcha", token: "TOKEN" } }));
+
+export const { chrome } = configure({
+  plugins: {
+    chrome: browser({ launch: true, puppeteer: puppeteerExtra }),
+  },
+});
+```
 
 ### Connect mode (remote Chrome)
 
@@ -368,7 +401,7 @@ it.
 
 |                           | Playwright                 | Glubean + @glubean/browser                    |
 | ------------------------- | -------------------------- | --------------------------------------------- |
-| Browser testing           | Best-in-class              | Good — auto-waiting, auto-trace, screenshots  |
+| Browser testing           | Best-in-class              | Covers ~80% of app testing needs              |
 | API testing               | Separate `request` context | First-class `ctx.http` with full tracing      |
 | API + browser in one test | Two paradigms              | Same `ctx`, same trace timeline               |
 | Environment management    | Manual env vars            | `ctx.vars`, `ctx.secrets`, env switching      |
@@ -380,9 +413,9 @@ it.
 ### When to use Playwright instead
 
 - Cross-browser testing is a hard requirement (Firefox, Safari)
-- You're testing a complex SPA with deep DOM interactions (drag-drop, canvas,
-  rich text editors)
-- Your entire test suite is browser-only and you need Locator chains
+- Complex DOM interactions: drag-drop, canvas, Figma-style editors, rich text
+- Visual regression testing with pixel-level comparison
+- Your entire test suite is browser-only and you need deep Locator chains
 
 ### When to use Glubean
 
@@ -394,11 +427,13 @@ it.
 
 ### The honest trade-off
 
-Playwright wins on **browser DX** — Locators, cross-browser, codegen, visual
-regression.
+`@glubean/browser` covers ~80% of what apps need to test in a browser — login
+flows, form submissions, navigation, CRUD operations, data display. For the
+remaining 20% (cross-browser, canvas, drag-drop, visual regression), Playwright
+is the right tool.
 
-Glubean wins on **everything else** — and browser is just one plugin among many
-(HTTP, MCP, and more to come).
+Glubean's edge is **everything around the browser** — and browser is just one
+plugin among many (HTTP, MCP, and more to come).
 
 If all you test is a browser, use Playwright. If your system has APIs, services,
 and a browser — use Glubean.
