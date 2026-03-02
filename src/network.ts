@@ -17,6 +17,8 @@ export type TraceFn = (trace: {
   url: string;
   status: number;
   duration: number;
+  requestBody?: unknown;
+  responseBody?: unknown;
 }) => void;
 
 const SKIP_PROTOCOLS = ["data:", "chrome-extension:", "devtools:", "blob:"];
@@ -31,6 +33,9 @@ const DEFAULT_EXCLUDE_PATHS = [
   "/apple-touch-icon.png",
   "/apple-touch-icon-precomposed.png",
 ];
+
+/** Max response body size to capture (bytes). Larger bodies are truncated. */
+const MAX_BODY_BYTES = 64 * 1024;
 
 /** @internal Exported for testing. */
 export function shouldSkipProtocol(url: string): boolean {
@@ -88,6 +93,18 @@ export interface NetworkTracerOptions {
   filter?: NetworkFilter;
 }
 
+/** Pending request state stored between CDP events. */
+interface PendingRequest {
+  method: string;
+  url: string;
+  startMs: number;
+  requestBody?: string;
+  // Filled on responseReceived; trace emitted on loadingFinished.
+  status?: number;
+  contentType?: string;
+  responseTimestamp?: number;
+}
+
 /**
  * Attach a CDP Network listener to the page that emits Glubean trace events
  * for every in-page network request.
@@ -102,23 +119,23 @@ export async function attachNetworkTracer(
   const cdp: CDPSession = await page.createCDPSession();
   await cdp.send("Network.enable");
 
-  const pending = new Map<
-    string,
-    { method: string; url: string; startMs: number }
-  >();
+  const pending = new Map<string, PendingRequest>();
 
+  // ── requestWillBeSent: capture request info ─────────────────────────
   const onRequestWillBeSent = (params: {
     requestId: string;
-    request: { method: string; url: string };
+    request: { method: string; url: string; postData?: string };
     timestamp: number;
   }) => {
     pending.set(params.requestId, {
       method: params.request.method,
       url: params.request.url,
       startMs: params.timestamp * 1000,
+      requestBody: params.request.postData,
     });
   };
 
+  // ── responseReceived: capture response metadata (body not yet ready) ─
   const onResponseReceived = (params: {
     requestId: string;
     response: { url: string; status: number; mimeType: string; headers: Record<string, string> };
@@ -126,13 +143,26 @@ export async function attachNetworkTracer(
   }) => {
     const req = pending.get(params.requestId);
     if (!req) return;
+
+    req.status = params.response.status;
+    req.contentType = params.response.mimeType || "";
+    req.responseTimestamp = params.timestamp;
+  };
+
+  // ── loadingFinished: body available, emit trace ─────────────────────
+  const onLoadingFinished = async (params: {
+    requestId: string;
+    timestamp: number;
+  }) => {
+    const req = pending.get(params.requestId);
+    if (!req || req.status === undefined) return;
     pending.delete(params.requestId);
 
     // Always skip non-HTTP protocols
     if (shouldSkipProtocol(req.url)) return;
 
-    const contentType = params.response.mimeType || "";
-    const status = params.response.status;
+    const contentType = req.contentType!;
+    const status = req.status;
 
     // Apply filter: custom predicate > default path + include checks
     if (filter) {
@@ -142,13 +172,55 @@ export async function attachNetworkTracer(
       if (!shouldInclude(contentType, include)) return;
     }
 
-    const duration = Math.round(params.timestamp * 1000 - req.startMs);
+    const duration = Math.round(
+      (req.responseTimestamp ?? params.timestamp) * 1000 - req.startMs,
+    );
+
+    // Capture response body for JSON responses or error statuses.
+    const isJson = contentType.toLowerCase().startsWith("application/json");
+    const isError = status >= 400;
+    const wantBody = isJson || isError;
+
+    let responseBody: unknown;
+    if (wantBody) {
+      try {
+        const result = await cdp.send("Network.getResponseBody", {
+          requestId: params.requestId,
+        }) as { body: string; base64Encoded: boolean };
+
+        if (!result.base64Encoded) {
+          const raw = result.body.length > MAX_BODY_BYTES
+            ? result.body.slice(0, MAX_BODY_BYTES) + "…[truncated]"
+            : result.body;
+          try {
+            responseBody = JSON.parse(raw);
+          } catch {
+            responseBody = raw;
+          }
+        }
+      } catch {
+        // Body not available (cached, redirected, etc.) — skip silently.
+      }
+    }
+
+    // Parse request body as JSON if possible.
+    let requestBody: unknown;
+    if (req.requestBody) {
+      try {
+        requestBody = JSON.parse(req.requestBody);
+      } catch {
+        requestBody = req.requestBody;
+      }
+    }
+
     trace({
       name: `[browser] ${req.method} ${shortPath(req.url)}`,
       method: req.method,
       url: req.url,
       status,
       duration,
+      ...(requestBody !== undefined && { requestBody }),
+      ...(responseBody !== undefined && { responseBody }),
     });
   };
 
@@ -158,11 +230,13 @@ export async function attachNetworkTracer(
 
   cdp.on("Network.requestWillBeSent", onRequestWillBeSent);
   cdp.on("Network.responseReceived", onResponseReceived);
+  cdp.on("Network.loadingFinished", onLoadingFinished);
   cdp.on("Network.loadingFailed", onLoadingFailed);
 
   return async () => {
     cdp.off("Network.requestWillBeSent", onRequestWillBeSent);
     cdp.off("Network.responseReceived", onResponseReceived);
+    cdp.off("Network.loadingFinished", onLoadingFinished);
     cdp.off("Network.loadingFailed", onLoadingFailed);
     try {
       await cdp.detach();
