@@ -1,0 +1,75 @@
+name: Auto-publish patch releases
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "deno.json"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  detect:
+    name: Detect patch bump
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.diff.outputs.should_publish }}
+      version: ${{ steps.diff.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check version change
+        id: diff
+        run: |
+          CURRENT=$(jq -r '.version' deno.json)
+          PREVIOUS=$(git show HEAD~1:deno.json 2>/dev/null | jq -r '.version' 2>/dev/null || echo "")
+
+          if [ -z "$PREVIOUS" ] || [ "$CURRENT" = "$PREVIOUS" ]; then
+            echo "No version change"
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          CUR_MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+          CUR_MINOR=$(echo "$CURRENT" | cut -d. -f2)
+          PREV_MAJOR=$(echo "$PREVIOUS" | cut -d. -f1)
+          PREV_MINOR=$(echo "$PREVIOUS" | cut -d. -f2)
+
+          if [ "$CUR_MAJOR" != "$PREV_MAJOR" ] || [ "$CUR_MINOR" != "$PREV_MINOR" ]; then
+            echo "⏭️  $PREVIOUS → $CURRENT (minor/major bump, skipping auto-publish)"
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "📦 @glubean/browser: $PREVIOUS → $CURRENT (patch bump)"
+          echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          echo "version=$CURRENT" >> "$GITHUB_OUTPUT"
+
+  publish:
+    name: Publish
+    needs: detect
+    if: needs.detect.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    environment: jsr
+    env:
+      JSR_TOKEN: ${{ secrets.JSR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Publish to JSR
+        run: |
+          VERSION="${{ needs.detect.outputs.version }}"
+          echo "Publishing @glubean/browser@$VERSION..."
+          if deno publish --token "$JSR_TOKEN"; then
+            echo "✅ Published @glubean/browser@$VERSION"
+          else
+            echo "::error::Failed to publish @glubean/browser@$VERSION"
+            exit 1
+          fi
