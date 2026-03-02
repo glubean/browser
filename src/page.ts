@@ -82,7 +82,14 @@ export interface NetworkTraceOptions {
    */
   include?: string[];
   /**
-   * Custom predicate. When provided, overrides `include`.
+   * URL paths to exclude. Pass `[]` to keep everything.
+   * Ignored when `filter` is provided.
+   *
+   * @default ["/favicon.ico", "/favicon.png", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png"]
+   */
+  excludePaths?: string[];
+  /**
+   * Custom predicate. When provided, overrides `include` and `excludePaths`.
    * Return `true` to trace the request, `false` to skip.
    */
   filter?: (req: { url: string; contentType: string; status: number }) => boolean;
@@ -235,6 +242,8 @@ export class GlubeanBrowser {
   private readonly _getBrowser: () => Promise<Browser>;
   private readonly _baseUrl: string | undefined;
   private readonly _options: BrowserOptions;
+  private _openPages = 0;
+  private _closeTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** @internal — created by the plugin factory. */
   constructor(
@@ -254,8 +263,22 @@ export class GlubeanBrowser {
    * in your teardown (or use `test.extend()` with a lifecycle factory).
    */
   async newPage(ctx: BrowserTestContext): Promise<InstrumentedPage> {
+    if (this._closeTimer) {
+      clearTimeout(this._closeTimer);
+      this._closeTimer = null;
+    }
+    this._openPages++;
+
     const browser = await this._getBrowser();
     const rawPage = await browser.newPage();
+
+    rawPage.once("close", () => {
+      this._openPages--;
+      if (this._openPages <= 0) {
+        this._scheduleClose();
+      }
+    });
+
     // Read testId lazily from the runtime global — the harness updates it
     // before each test runs, so reading at newPage() time is always fresh.
     // deno-lint-ignore no-explicit-any
@@ -269,6 +292,16 @@ export class GlubeanBrowser {
       this._options,
       runtimeTestId,
     );
+  }
+
+  private _scheduleClose(): void {
+    this._closeTimer = setTimeout(async () => {
+      if (this._openPages <= 0) {
+        try { await this.close(); } catch { /* already closed */ }
+      }
+    }, 3000);
+    // Don't let the timer keep the process alive
+    Deno.unrefTimer(this._closeTimer as unknown as number);
   }
 
   /** Disconnect from the browser without closing it. Useful for remote Chrome. */
@@ -389,6 +422,7 @@ export class GlubeanPage {
       gp._networkCleanup = await attachNetworkTracer(page, {
         trace: (t) => ctx.trace(t),
         include: filterOpts?.include,
+        excludePaths: filterOpts?.excludePaths,
         filter: filterOpts?.filter,
       });
     }

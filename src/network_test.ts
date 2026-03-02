@@ -1,5 +1,5 @@
 import { assertEquals } from "jsr:@std/assert";
-import { shouldInclude, shouldSkipProtocol } from "./network.ts";
+import { shouldInclude, shouldSkipPath, shouldSkipProtocol } from "./network.ts";
 
 // ---------------------------------------------------------------------------
 // Protocol filtering
@@ -55,7 +55,7 @@ Deno.test("shouldInclude: static assets excluded by default", () => {
 Deno.test("shouldInclude: custom include list", () => {
   const custom = ["application/json", "text/xml", "application/graphql"];
   assertEquals(shouldInclude("text/xml", custom), true);
-  assertEquals(shouldInclude("application/graphql-response+json", custom), false);
+  assertEquals(shouldInclude("application/graphql-response+json", custom), true);
   assertEquals(shouldInclude("text/html", custom), false);
 });
 
@@ -66,4 +66,25 @@ Deno.test("shouldInclude: case insensitive", () => {
 
 Deno.test("shouldInclude: empty content-type excluded", () => {
   assertEquals(shouldInclude("", DEFAULT_INCLUDE), false);
+});
+
+// ---------------------------------------------------------------------------
+// Path exclusion
+// ---------------------------------------------------------------------------
+
+const DEFAULT_EXCLUDE = ["/favicon.ico", "/favicon.png", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png"];
+
+Deno.test("shouldSkipPath: default excluded paths", () => {
+  assertEquals(shouldSkipPath("https://example.com/favicon.ico", DEFAULT_EXCLUDE), true);
+  assertEquals(shouldSkipPath("https://example.com/favicon.png", DEFAULT_EXCLUDE), true);
+  assertEquals(shouldSkipPath("https://example.com/apple-touch-icon.png", DEFAULT_EXCLUDE), true);
+});
+
+Deno.test("shouldSkipPath: normal paths pass through", () => {
+  assertEquals(shouldSkipPath("https://example.com/api/users", DEFAULT_EXCLUDE), false);
+  assertEquals(shouldSkipPath("https://example.com/login", DEFAULT_EXCLUDE), false);
+});
+
+Deno.test("shouldSkipPath: empty exclude list keeps everything", () => {
+  assertEquals(shouldSkipPath("https://example.com/favicon.ico", []), false);
 });

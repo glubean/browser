@@ -24,10 +24,31 @@ const SKIP_PROTOCOLS = ["data:", "chrome-extension:", "devtools:", "blob:"];
 /** Default content-type prefixes to include in traces. */
 const DEFAULT_INCLUDE = ["application/json", "text/html"];
 
+/** Default URL paths to skip (browser-initiated noise). */
+const DEFAULT_EXCLUDE_PATHS = [
+  "/favicon.ico",
+  "/favicon.png",
+  "/apple-touch-icon.png",
+  "/apple-touch-icon-precomposed.png",
+];
+
 /** @internal Exported for testing. */
 export function shouldSkipProtocol(url: string): boolean {
   for (const proto of SKIP_PROTOCOLS) {
     if (url.startsWith(proto)) return true;
+  }
+  return false;
+}
+
+/** @internal Exported for testing. */
+export function shouldSkipPath(url: string, excludePaths: string[]): boolean {
+  try {
+    const pathname = new URL(url).pathname;
+    for (const p of excludePaths) {
+      if (pathname === p) return true;
+    }
+  } catch {
+    // invalid URL, don't skip
   }
   return false;
 }
@@ -58,7 +79,12 @@ export interface NetworkTracerOptions {
    * @default ["application/json", "text/html"]
    */
   include?: string[];
-  /** Custom predicate. Overrides `include` when provided. */
+  /**
+   * URL paths to skip. Pass `[]` to disable default exclusions.
+   * @default ["/favicon.ico", "/favicon.png", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png"]
+   */
+  excludePaths?: string[];
+  /** Custom predicate. Overrides `include` and `excludePaths` when provided. */
   filter?: NetworkFilter;
 }
 
@@ -72,7 +98,7 @@ export async function attachNetworkTracer(
   page: Page,
   options: NetworkTracerOptions,
 ): Promise<() => Promise<void>> {
-  const { trace, filter, include = DEFAULT_INCLUDE } = options;
+  const { trace, filter, include = DEFAULT_INCLUDE, excludePaths = DEFAULT_EXCLUDE_PATHS } = options;
   const cdp: CDPSession = await page.createCDPSession();
   await cdp.send("Network.enable");
 
@@ -108,10 +134,11 @@ export async function attachNetworkTracer(
     const contentType = params.response.mimeType || "";
     const status = params.response.status;
 
-    // Apply filter: custom predicate > include list
+    // Apply filter: custom predicate > default path + include checks
     if (filter) {
       if (!filter({ url: req.url, contentType, status })) return;
     } else {
+      if (shouldSkipPath(req.url, excludePaths)) return;
       if (!shouldInclude(contentType, include)) return;
     }
 
