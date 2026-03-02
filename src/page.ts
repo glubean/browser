@@ -270,7 +270,16 @@ export class GlubeanBrowser {
     this._openPages++;
 
     const browser = await this._getBrowser();
-    const rawPage = await browser.newPage();
+
+    // Reuse the default about:blank tab instead of opening a new one.
+    // When Chrome launches it always creates one blank page — reusing it
+    // avoids the extra empty tab that lingers in headless: false mode.
+    const pages = await browser.pages();
+    const blank = pages.find((p) => {
+      const url = p.url();
+      return url === "about:blank" || url === "chrome://new-tab-page/";
+    });
+    const rawPage = blank ?? await browser.newPage();
 
     rawPage.once("close", () => {
       this._openPages--;
@@ -1686,6 +1695,23 @@ export class GlubeanPage {
       await this.raw.close();
     } catch {
       // page may already be closed
+    }
+
+    // Close leftover blank tabs so Chrome doesn't linger with an empty window.
+    try {
+      const browser = this.raw.browser();
+      const remaining = await browser.pages();
+      const allBlank = remaining.length > 0 && remaining.every((p) => {
+        const url = p.url();
+        return url === "about:blank" || url === "chrome://new-tab-page/";
+      });
+      if (allBlank) {
+        for (const p of remaining) {
+          try { await p.close(); } catch { /* ignore */ }
+        }
+      }
+    } catch {
+      // best-effort cleanup
     }
   }
 
