@@ -20,42 +20,46 @@ export type TraceFn = (trace: {
 }) => void;
 
 const SKIP_PROTOCOLS = ["data:", "chrome-extension:", "devtools:", "blob:"];
-const SKIP_EXTENSIONS = [
-  ".png",
-  ".jpg",
-  ".jpeg",
-  ".gif",
-  ".svg",
-  ".webp",
-  ".ico",
-  ".woff",
-  ".woff2",
-  ".ttf",
-  ".eot",
-  ".css",
-  ".map",
-];
+
+/** Default content-type prefixes to include in traces. */
+const DEFAULT_INCLUDE = ["application/json", "text/html"];
 
 /** @internal Exported for testing. */
-export function shouldSkip(url: string): boolean {
+export function shouldSkipProtocol(url: string): boolean {
   for (const proto of SKIP_PROTOCOLS) {
     if (url.startsWith(proto)) return true;
-  }
-  try {
-    const pathname = new URL(url).pathname;
-    for (const ext of SKIP_EXTENSIONS) {
-      if (pathname.endsWith(ext)) return true;
-    }
-  } catch {
-    // malformed URL — don't skip
   }
   return false;
 }
 
+/** @internal Exported for testing. */
+export function shouldInclude(
+  contentType: string,
+  include: string[],
+): boolean {
+  const ct = contentType.toLowerCase();
+  for (const prefix of include) {
+    if (ct.startsWith(prefix)) return true;
+  }
+  return false;
+}
+
+/** Filter predicate for network requests. */
+export type NetworkFilter = (req: {
+  url: string;
+  contentType: string;
+  status: number;
+}) => boolean;
+
 export interface NetworkTracerOptions {
   trace: TraceFn;
-  /** Skip static assets and non-HTTP protocols. Default: true. */
-  filterStatic?: boolean;
+  /**
+   * Content-type prefixes to include. Ignored when `filter` is provided.
+   * @default ["application/json", "text/html"]
+   */
+  include?: string[];
+  /** Custom predicate. Overrides `include` when provided. */
+  filter?: NetworkFilter;
 }
 
 /**
@@ -68,7 +72,7 @@ export async function attachNetworkTracer(
   page: Page,
   options: NetworkTracerOptions,
 ): Promise<() => Promise<void>> {
-  const { trace, filterStatic = true } = options;
+  const { trace, filter, include = DEFAULT_INCLUDE } = options;
   const cdp: CDPSession = await page.createCDPSession();
   await cdp.send("Network.enable");
 
@@ -91,21 +95,32 @@ export async function attachNetworkTracer(
 
   const onResponseReceived = (params: {
     requestId: string;
-    response: { url: string; status: number };
+    response: { url: string; status: number; mimeType: string; headers: Record<string, string> };
     timestamp: number;
   }) => {
     const req = pending.get(params.requestId);
     if (!req) return;
     pending.delete(params.requestId);
 
-    if (filterStatic && shouldSkip(req.url)) return;
+    // Always skip non-HTTP protocols
+    if (shouldSkipProtocol(req.url)) return;
+
+    const contentType = params.response.mimeType || "";
+    const status = params.response.status;
+
+    // Apply filter: custom predicate > include list
+    if (filter) {
+      if (!filter({ url: req.url, contentType, status })) return;
+    } else {
+      if (!shouldInclude(contentType, include)) return;
+    }
 
     const duration = Math.round(params.timestamp * 1000 - req.startMs);
     trace({
       name: `[browser] ${req.method} ${shortPath(req.url)}`,
       method: req.method,
       url: req.url,
-      status: params.response.status,
+      status,
       duration,
     });
   };

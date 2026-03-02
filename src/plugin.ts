@@ -66,6 +66,33 @@ import { connectChrome, launchChrome } from "./chrome.ts";
  * });
  * ```
  */
+/**
+ * Resolve `{{VAR}}` templates in launch options and coerce types.
+ *
+ * String values containing `{{...}}` are resolved via `runtime.resolveTemplate()`.
+ * After resolution, `"true"/"false"` → boolean, numeric strings → number.
+ */
+function resolveLaunchOptions(
+  raw: Record<string, unknown> | undefined,
+  runtime: GlubeanRuntime,
+): Record<string, unknown> | undefined {
+  if (!raw) return undefined;
+  const resolved: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(raw)) {
+    if (typeof val === "string") {
+      const str = runtime.resolveTemplate(val);
+      // Coerce well-known types
+      if (str === "true") resolved[key] = true;
+      else if (str === "false") resolved[key] = false;
+      else if (str !== "" && !isNaN(Number(str))) resolved[key] = Number(str);
+      else resolved[key] = str;
+    } else {
+      resolved[key] = val;
+    }
+  }
+  return resolved;
+}
+
 export function browser(options: BrowserOptions): { __type: GlubeanBrowser; create: (runtime: GlubeanRuntime) => GlubeanBrowser } {
   return definePlugin((runtime: GlubeanRuntime): GlubeanBrowser => {
     const baseUrl = options.baseUrl
@@ -79,7 +106,8 @@ export function browser(options: BrowserOptions): { __type: GlubeanBrowser; crea
     function getBrowser(): Promise<Browser> {
       if (!browserPromise) {
         if ("launch" in options && options.launch) {
-          browserPromise = launchChrome(options.executablePath, pptr);
+          const resolvedLaunchOptions = resolveLaunchOptions(options.launchOptions, runtime);
+          browserPromise = launchChrome(options.executablePath, pptr, resolvedLaunchOptions);
         } else if ("endpoint" in options && options.endpoint) {
           const endpoint = runtime.requireVar(options.endpoint);
           browserPromise = connectChrome(endpoint, pptr);

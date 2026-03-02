@@ -47,6 +47,7 @@ export type {
   BrowserTestContext,
   InstrumentedPage,
   PuppeteerLike,
+  NetworkTraceOptions,
   ResponseChecks,
   ScreenshotMode,
 } from "./src/page.ts";

@@ -58,15 +58,17 @@ export function detectChromePath(): string | null {
 }
 
 /**
- * Launch a local Chrome instance in headless mode.
+ * Launch a local Chrome instance.
  *
  * @param executablePath Explicit path to Chrome. If omitted, auto-detects.
  * @param puppeteerInstance Custom puppeteer-compatible instance (e.g. puppeteer-extra).
+ * @param launchOptions Extra options forwarded to `puppeteer.launch()`. Merged with defaults; user values win.
  * @returns A connected Browser instance. The caller is responsible for closing it.
  */
 export async function launchChrome(
   executablePath?: string,
   puppeteerInstance?: PuppeteerLike,
+  launchOptions?: Record<string, unknown>,
 ): Promise<Browser> {
   const chromePath = executablePath ?? detectChromePath();
   if (!chromePath) {
@@ -85,7 +87,6 @@ export async function launchChrome(
 
   const pptr = puppeteerInstance ?? puppeteerDefault;
   return await pptr.launch({
-    executablePath: chromePath,
     headless: true,
     args: [
       "--no-sandbox",
@@ -93,6 +94,8 @@ export async function launchChrome(
       "--disable-dev-shm-usage",
       "--disable-gpu",
     ],
+    ...launchOptions,
+    executablePath: chromePath,
   });
 }
 

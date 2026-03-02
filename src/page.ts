@@ -70,6 +70,24 @@ export type BrowserOptions =
 /** Auto-screenshot behavior. */
 export type ScreenshotMode = "off" | "on-failure" | "every-step";
 
+/** Network trace filter configuration. */
+export interface NetworkTraceOptions {
+  /**
+   * Content-type prefixes to include. Requests whose `content-type` response
+   * header starts with any of these prefixes are traced; the rest are skipped.
+   *
+   * Ignored when `filter` is provided.
+   *
+   * @default ["application/json", "text/html"]
+   */
+  include?: string[];
+  /**
+   * Custom predicate. When provided, overrides `include`.
+   * Return `true` to trace the request, `false` to skip.
+   */
+  filter?: (req: { url: string; contentType: string; status: number }) => boolean;
+}
+
 /** Checks to apply in `expectResponse()`. */
 export interface ResponseChecks {
   /** Expected status code, or a predicate. */
@@ -101,8 +119,16 @@ interface BrowserOptionsBase {
    * @example "APP_URL"
    */
   baseUrl?: string;
-  /** Emit `ctx.trace()` for in-page network requests (XHR, fetch). Default: true. */
-  networkTrace?: boolean;
+  /**
+   * Network request tracing.
+   *
+   * - `true` — trace with default filter (document + JSON only)
+   * - `false` — disable network tracing
+   * - `object` — custom filter configuration
+   *
+   * Default: `true`.
+   */
+  networkTrace?: boolean | NetworkTraceOptions;
   /** Emit `ctx.metric()` for navigation timing. Default: true. */
   metrics?: boolean;
   /** Forward browser console output to `ctx.log()`/`ctx.warn()`. Default: true. */
@@ -118,6 +144,21 @@ interface BrowserOptionsBase {
   screenshotDir?: string;
   /** Default timeout (ms) for Locator auto-waiting on `click()`/`type()` etc. Default: 30 000. */
   actionTimeout?: number;
+  /**
+   * Extra options forwarded to `puppeteer.launch()`.
+   *
+   * Merged with Glubean defaults (`headless: true`, `--no-sandbox`, etc.).
+   * Your values take priority over defaults.
+   *
+   * @example
+   * ```ts
+   * browser({
+   *   launch: true,
+   *   launchOptions: { headless: false, slowMo: 100, devtools: true },
+   * })
+   * ```
+   */
+  launchOptions?: Record<string, unknown>;
 }
 
 /**
@@ -299,7 +340,7 @@ export class GlubeanPage {
     runtimeTestId?: string,
   ): Promise<InstrumentedPage> {
     const consoleForward = options.consoleForward ?? true;
-    const networkTrace = options.networkTrace ?? true;
+    const networkTraceOpt = options.networkTrace ?? true;
     const metricsEnabled = options.metrics ?? true;
     const screenshotMode = options.screenshot ?? "on-failure";
     const screenshotDir = options.screenshotDir ?? ".glubean/screenshots";
@@ -343,9 +384,12 @@ export class GlubeanPage {
       });
     }
 
-    if (networkTrace) {
+    if (networkTraceOpt !== false) {
+      const filterOpts = typeof networkTraceOpt === "object" ? networkTraceOpt : undefined;
       gp._networkCleanup = await attachNetworkTracer(page, {
         trace: (t) => ctx.trace(t),
+        include: filterOpts?.include,
+        filter: filterOpts?.filter,
       });
     }
 
@@ -1175,6 +1219,7 @@ export class GlubeanPage {
         status: "ok",
       });
     } catch (err) {
+      await this._captureFailure(`expectURL-${String(pattern)}`);
       this._ctx.action({
         category: "browser:assert",
         target: `expectURL(${JSON.stringify(String(pattern))})`,
@@ -1225,6 +1270,7 @@ export class GlubeanPage {
         detail: { expected: String(expected), actual: lastVal },
       });
     } catch (err) {
+      await this._captureFailure(`expectText-${selector}`);
       this._ctx.action({
         category: "browser:assert",
         target: `expectText("${selector}")`,
@@ -1264,6 +1310,7 @@ export class GlubeanPage {
         status: "ok",
       });
     } catch (err) {
+      await this._captureFailure(`expectVisible-${selector}`);
       this._ctx.action({
         category: "browser:assert",
         target: `expectVisible("${selector}")`,
@@ -1299,6 +1346,7 @@ export class GlubeanPage {
         status: "ok",
       });
     } catch (err) {
+      await this._captureFailure(`expectHidden-${selector}`);
       this._ctx.action({
         category: "browser:assert",
         target: `expectHidden("${selector}")`,
@@ -1355,6 +1403,7 @@ export class GlubeanPage {
         detail: { expected: String(expected), actual: lastVal },
       });
     } catch (err) {
+      await this._captureFailure(`expectAttribute-${selector}-${attr}`);
       this._ctx.action({
         category: "browser:assert",
         target: `expectAttribute("${selector}", "${attr}")`,
@@ -1397,6 +1446,7 @@ export class GlubeanPage {
         detail: { expected, actual: lastCount },
       });
     } catch (err) {
+      await this._captureFailure(`expectCount-${selector}`);
       this._ctx.action({
         category: "browser:assert",
         target: `expectCount("${selector}")`,
