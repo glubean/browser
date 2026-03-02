@@ -1233,17 +1233,30 @@ export class GlubeanPage {
 
   /**
    * Assert that an element's text content matches `expected`. Retries until match or timeout.
+   *
+   * By default, text is normalized (trimmed + collapsed whitespace) and matched
+   * with `includes`. Use `exact: true` for strict equality or pass a `RegExp`
+   * for pattern matching.
    */
   async expectText(
     selector: string,
     expected: string | RegExp,
-    options?: { timeout?: number },
+    options?: { timeout?: number; exact?: boolean; ignoreCase?: boolean },
   ): Promise<void> {
+    const normalize = (s: string) => s.replace(/\s+/g, " ").trim();
     const matches = (text: string | null) => {
       if (text === null) return false;
-      return typeof expected === "string"
-        ? text === expected
-        : expected.test(text);
+      if (expected instanceof RegExp) return expected.test(text);
+      const norm = normalize(text);
+      const exp = normalize(expected);
+      if (options?.exact) {
+        return options?.ignoreCase
+          ? norm.toLowerCase() === exp.toLowerCase()
+          : norm === exp;
+      }
+      return options?.ignoreCase
+        ? norm.toLowerCase().includes(exp.toLowerCase())
+        : norm.includes(exp);
     };
 
     const start = Date.now();
