@@ -66,7 +66,7 @@ import { connectChrome, launchChrome } from "./chrome.ts";
  * });
  * ```
  */
-export function browser(options: BrowserOptions) {
+export function browser(options: BrowserOptions): { __type: GlubeanBrowser; create: (runtime: GlubeanRuntime) => GlubeanBrowser } {
   return definePlugin((runtime: GlubeanRuntime): GlubeanBrowser => {
     const baseUrl = options.baseUrl
       ? runtime.vars[options.baseUrl] ?? undefined

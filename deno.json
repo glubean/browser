@@ -14,9 +14,11 @@
   },
   "publish": {
     "exclude": [
-      "*_test.ts",
+      "**/*_test.ts",
       "testdata/",
-      "e2e/"
+      "e2e/",
+      ".claude/",
+      "AGENTS.md"
     ]
   }
 }
