@@ -176,31 +176,26 @@ export async function attachNetworkTracer(
       (req.responseTimestamp ?? params.timestamp) * 1000 - req.startMs,
     );
 
-    // Capture response body for JSON responses or error statuses.
-    const isJson = contentType.toLowerCase().startsWith("application/json");
-    const isError = status >= 400;
-    const wantBody = isJson || isError;
-
+    // Always capture response body for traced requests. Body filtering
+    // and redaction happen downstream in the runner/CLI pipeline.
     let responseBody: unknown;
-    if (wantBody) {
-      try {
-        const result = await cdp.send("Network.getResponseBody", {
-          requestId: params.requestId,
-        }) as { body: string; base64Encoded: boolean };
+    try {
+      const result = await cdp.send("Network.getResponseBody", {
+        requestId: params.requestId,
+      }) as { body: string; base64Encoded: boolean };
 
-        if (!result.base64Encoded) {
-          const raw = result.body.length > MAX_BODY_BYTES
-            ? result.body.slice(0, MAX_BODY_BYTES) + "…[truncated]"
-            : result.body;
-          try {
-            responseBody = JSON.parse(raw);
-          } catch {
-            responseBody = raw;
-          }
+      if (!result.base64Encoded) {
+        const raw = result.body.length > MAX_BODY_BYTES
+          ? result.body.slice(0, MAX_BODY_BYTES) + "…[truncated]"
+          : result.body;
+        try {
+          responseBody = JSON.parse(raw);
+        } catch {
+          responseBody = raw;
         }
-      } catch {
-        // Body not available (cached, redirected, etc.) — skip silently.
       }
+    } catch {
+      // Body not available (cached, redirected, etc.) — skip silently.
     }
 
     // Parse request body as JSON if possible.
